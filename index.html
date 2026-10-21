@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="gu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Sanzari Booking Receipt</title>
+<meta name="theme-color" content="#F5F8FC">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Vadodara:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{--bg:#F5F8FC;--ink:#0E2238;--ink2:#2A3D55;--muted:#5E6E83;--gold:#E9A30E;--goldDeep:#B97A00;--goldSoft:#FFF4D6;--saffron:#F08A00;--green:#1DAA6B;--blue:#2B7DE9;--coral:#E5533D;--line:#E3EAF3;--wa:#25D366}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Hind Vadodara',system-ui,sans-serif;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+
+/* ---------- APP ---------- */
+.app{position:relative;z-index:1;min-height:100vh;background:radial-gradient(600px 400px at 0% 0%,#FFE3B3 0%,rgba(255,227,179,0) 70%),radial-gradient(600px 500px at 100% 20%,#D4E5FB 0%,rgba(212,229,251,0) 70%),var(--bg);padding-bottom:110px}
+.bar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;background:rgba(245,248,252,.78);backdrop-filter:saturate(1.6) blur(16px);-webkit-backdrop-filter:saturate(1.6) blur(16px);border-bottom:1px solid rgba(14,34,56,.06)}
+.bar img{height:34px;display:block}
+.bar .t{font-size:12px;font-weight:600;letter-spacing:1.4px;color:var(--goldDeep);background:var(--goldSoft);border:1px solid #F3DDA0;padding:5px 12px;border-radius:99px;white-space:nowrap}
+.wrap{max-width:1240px;margin:0 auto;padding:18px 16px;display:grid;grid-template-columns:minmax(0,1fr);gap:22px}
+@media(min-width:1000px){.wrap{grid-template-columns:minmax(0,560px)}.side{position:static}}
+h2.ttl{font-size:26px;line-height:1.15;font-weight:700;letter-spacing:-.2px}
+h2.ttl span{color:var(--saffron)}
+.lead{color:var(--muted);font-size:14px;margin-top:4px}
+.panel{background:rgba(255,255,255,.86);border:1px solid #fff;border-radius:20px;box-shadow:0 10px 30px rgba(14,34,56,.07);padding:16px;margin-top:14px}
+.ph{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;margin-bottom:12px}
+.ph i{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;color:#fff;font-style:normal;font-size:14px}
+.ph small{font-weight:500;color:var(--muted);font-size:12px}
+.fl{display:block;margin-top:10px}
+.fl>span{display:block;font-size:12.5px;color:var(--muted);font-weight:500;margin-bottom:4px}
+.fl>span b{color:var(--ink2);font-weight:600}
+.in{width:100%;height:44px;border-radius:12px;border:1px solid var(--line);background:#F6F9FC;padding:0 12px;font-size:15px;font-weight:600;outline:none;transition:border-color .15s,box-shadow .15s,background .15s}
+.in:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(43,125,233,.12)}
+.in.bad{border-color:var(--coral);box-shadow:0 0 0 4px rgba(229,83,61,.12)}
+textarea.in{height:64px;padding-top:10px;resize:vertical}
+.cur{position:relative}.cur:before{content:"₹";position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-weight:600;pointer-events:none}.cur .in{padding-left:26px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:#fff;border-radius:12px;padding:8px 12px;font-size:13.5px;font-weight:600;cursor:pointer;line-height:1.2;text-align:left;transition:all .15s}
+.chip small{display:block;font-size:11px;font-weight:500;color:var(--muted)}
+.chip[aria-pressed=true]{border-color:var(--saffron);background:#FFF6EA;box-shadow:0 0 0 3px rgba(240,138,0,.14)}
+.chip:disabled{opacity:.4;cursor:not-allowed;text-decoration:line-through}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.seg .chip{padding:10px 12px}
+.seg .chip b{display:block;font-size:17px}
+.step{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--line);background:#F6F9FC;border-radius:12px;height:44px;padding:0 5px}
+.step button{width:34px;height:34px;border-radius:10px;border:0;background:#fff;box-shadow:0 1px 3px rgba(14,34,56,.12);font-size:19px;font-weight:600;cursor:pointer}
+.step output{font-size:16px;font-weight:700}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:0 8px}
+.mlist{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.mrow{display:grid;grid-template-columns:1fr 58px auto 30px;gap:6px;align-items:center}
+.mtag{font-size:11px;padding:3px 9px;border-radius:99px;font-weight:600;white-space:nowrap;text-align:center}
+.mtag.adult{background:#E1EEFD;color:var(--blue)}.mtag.kid{background:#FFF0E0;color:var(--saffron)}
+.mrem{width:28px;height:28px;border:0;background:none;font-size:18px;cursor:pointer;color:var(--coral);display:flex;align-items:center;justify-content:center}
+.madd{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;font-size:13.5px;font-weight:700;color:var(--blue);background:none;border:1.5px dashed rgba(43,125,233,.35);border-radius:12px;padding:9px 12px;cursor:pointer;width:100%;transition:all .15s}
+.madd:hover{background:rgba(43,125,233,.05);border-color:var(--blue)}
+.sum{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.sbox{border-radius:14px;padding:10px 12px;border:1px solid var(--line);background:#fff}
+.sbox span{font-size:12px;color:var(--muted);font-weight:500}
+.sbox b{display:block;font-size:20px;font-weight:700}
+.sbox.due{background:linear-gradient(160deg,#FFF1EC,#fff);border-color:#F7CDBF}.sbox.due b{color:var(--coral)}
+.sbox.paid{background:linear-gradient(160deg,#E9F8F0,#fff);border-color:#BFE8D2}.sbox.paid b{color:var(--green)}
+.auto{font-size:11.5px;color:var(--blue);background:none;border:0;cursor:pointer;font-weight:600;float:right}
+.err{color:var(--coral);font-size:13px;font-weight:600;margin-top:10px;display:none}
+
+/* action bar */
+.act{position:fixed;left:50%;bottom:max(14px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:30;display:flex;gap:8px;padding:8px;border-radius:22px;background:rgba(255,255,255,.72);backdrop-filter:saturate(1.8) blur(18px);-webkit-backdrop-filter:saturate(1.8) blur(18px);border:1px solid rgba(255,255,255,.9);box-shadow:0 12px 34px rgba(14,34,56,.16);width:min(560px,calc(100% - 24px))}
+.btn{flex:1;height:50px;border:0;border-radius:15px;font-weight:700;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;transition:transform .12s,opacity .2s}
+.btn:active{transform:scale(.97)}
+.btn.pri{background:linear-gradient(135deg,#F5A623,#E07B00);color:#fff;box-shadow:0 6px 16px rgba(240,138,0,.35)}
+.btn.wa{background:var(--wa);color:#fff;box-shadow:0 6px 16px rgba(37,211,102,.35)}
+.btn.ghost{background:#fff;border:1px solid var(--line);flex:0 0 auto;padding:0 14px}
+.btn[disabled]{opacity:.55;pointer-events:none}
+.btn[hidden]{display:none}
+.btn svg{width:20px;height:20px}
+.toast{position:fixed;left:50%;bottom:92px;transform:translate(-50%,20px);opacity:0;z-index:40;background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;font-weight:600;transition:all .25s;pointer-events:none;max-width:calc(100% - 32px);text-align:center}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+/* preview */
+.pvh{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.pvh b{font-size:15px}.pvh span{font-size:12px;color:var(--muted)}
+.pv{position:relative}
+.pv .scaler{transform-origin:0 0;position:absolute;left:0;top:0}
+.pv .a4{margin-bottom:24px;box-shadow:0 16px 40px rgba(14,34,56,.14);border-radius:4px}
+#exp{position:fixed;left:0;top:0;z-index:-10;pointer-events:none}
+
+/* ---------- A4 PAGES ---------- */
+.a4{width:794px;height:1123px;position:relative;overflow:hidden;background:#F5F8FC;color:var(--ink);font-family:'Hind Vadodara',sans-serif}
+.a4 .bg{position:absolute;inset:0;background:radial-gradient(380px 380px at 40px 30px,rgba(255,216,154,.75),rgba(255,216,154,0) 70%),radial-gradient(380px 380px at 800px 380px,rgba(191,217,251,.7),rgba(191,217,251,0) 70%),radial-gradient(360px 360px at 760px 1120px,rgba(255,230,194,.7),rgba(255,230,194,0) 70%),radial-gradient(300px 300px at 0px 900px,rgba(214,232,252,.7),rgba(214,232,252,0) 70%)}
+.a4 .pg{position:absolute;inset:0;padding:32px 40px}
+.a4 .top{display:flex;align-items:center;justify-content:space-between}
+.a4 .top img{height:58px}
+.a4 .pill{font-size:11px;font-weight:600;letter-spacing:1.6px;color:var(--goldDeep);background:var(--goldSoft);border:1px solid #F3DDA0;padding:6px 14px;border-radius:99px}
+.a4 .hero{margin-top:18px;display:flex;justify-content:space-between;align-items:flex-end}
+.a4 .eb{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;letter-spacing:2px;color:var(--green)}
+.a4 .tick{width:20px;height:20px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center}
+.a4 h1{font-size:34px;font-weight:700;line-height:1.15;margin-top:4px}
+.a4 h1 span{color:var(--saffron)}
+.a4 .sub{font-size:13px;color:var(--muted);margin-top:2px}
+.a4 .meta{display:grid;grid-template-columns:auto 160px;gap:6px 10px;align-items:center;font-size:11px;color:var(--muted)}
+.a4 .v{min-height:32px;border-radius:9px;background:#F3F6FA;border:1px solid var(--line);font-size:14px;font-weight:600;display:flex;align-items:center;padding:0 10px;color:var(--ink);position:relative}
+.a4 .v.e{color:#A8B4C3;font-weight:500}
+.a4 .card{background:rgba(255,255,255,.86);border:1px solid #fff;border-radius:18px;box-shadow:0 8px 26px rgba(14,34,56,.07);padding:15px 18px}
+.a4 .ch{display:flex;align-items:center;gap:9px;font-size:13.5px;font-weight:700;margin-bottom:9px}
+.a4 .ic{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px}
+.a4 .ch small{font-weight:500;color:var(--muted);font-size:11px}
+.a4 .l{font-size:11px;color:var(--muted);font-weight:500;margin:9px 0 3px}
+.a4 .l b{color:var(--ink2);font-weight:600}
+.a4 .r2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.a4 .r3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 10px}
+.a4 .v .tag{position:absolute;right:10px;font-size:10.5px;color:#8A98AA;font-weight:500}
+.a4 .pay{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.a4 .pb{border-radius:14px;padding:11px 14px 12px;border:1px solid var(--line);background:#fff}
+.a4 .pb .l{margin-top:0}
+.a4 .pb .amt{font-size:24px;font-weight:700;line-height:1.3}
+.a4 .pb .amt small{font-size:16px;color:var(--muted);margin-right:4px}
+.a4 .pb.adv{background:linear-gradient(160deg,#E9F8F0,#fff);border-color:#BFE8D2}.a4 .pb.adv .l b,.a4 .pb.adv .amt{color:var(--green)}
+.a4 .pb.due{background:linear-gradient(160deg,#FFF1EC,#fff);border-color:#F7CDBF}.a4 .pb.due .l b,.a4 .pb.due .amt{color:var(--coral)}
+.a4 .pol{display:grid;gap:8px}
+.a4 .pr{display:grid;grid-template-columns:96px 1fr auto;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:13px;padding:9px 12px}
+.a4 .badge{border-radius:10px;text-align:center;padding:5px 0 4px;font-weight:700;font-size:18px;line-height:1.1}
+.a4 .badge small{display:block;font-size:9.5px;font-weight:600;letter-spacing:.6px}
+.a4 .pr .tx{font-size:13px;font-weight:600;line-height:1.35}
+.a4 .pr .tx small{display:block;font-size:11px;font-weight:500;color:var(--muted)}
+.a4 .pr .cut{font-size:12px;font-weight:700;text-align:right;line-height:1.3}
+.a4 .pr .cut small{display:block;font-size:10px;font-weight:500;color:var(--muted)}
+.a4 .foot{position:absolute;left:40px;right:40px;bottom:28px}
+.a4 .contact{display:grid;grid-template-columns:1fr 1fr 1.15fr;gap:10px}
+.a4 .cb{border-radius:14px;padding:10px 14px;color:#fff}
+.a4 .cb small{display:block;font-size:9.5px;letter-spacing:1.3px;font-weight:600;opacity:.88}
+.a4 .cb b{font-size:19px;font-weight:700;letter-spacing:.3px}
+.a4 .sig{border:1.5px dashed #CBD6E4;border-radius:14px;padding:8px 14px;font-size:10.5px;color:var(--muted);display:flex;flex-direction:column;justify-content:space-between;background:rgba(255,255,255,.65)}
+.a4 .sig b{color:var(--ink2);font-size:12px}
+.a4 .addr{display:flex;justify-content:space-between;align-items:center;margin-top:11px;font-size:11px;color:var(--muted)}
+.a4 .addr b{color:var(--ink2)}
+.a4 .since{font-size:10px;letter-spacing:3px;color:var(--goldDeep);font-weight:700}
+.a4 .pno{font-size:10px;color:#9AA7B6;font-weight:600;letter-spacing:1px}
+/* page 2 */
+.a4 .ban{height:178px;border-radius:20px;background-size:cover;background-position:center;position:relative;overflow:hidden;box-shadow:0 10px 28px rgba(14,34,56,.14)}
+.a4 .ban .sh{position:absolute;inset:0;background:linear-gradient(90deg,rgba(9,24,42,.82) 0%,rgba(9,24,42,.45) 55%,rgba(9,24,42,.05) 100%)}
+.a4 .ban .in2{position:absolute;left:24px;top:20px;right:24px;color:#fff}
+.a4 .ban .k{font-size:11px;letter-spacing:2px;font-weight:600;color:#FFD27A}
+.a4 .ban h3{font-size:31px;font-weight:700;line-height:1.15;margin-top:2px}
+.a4 .ban p{font-size:13px;opacity:.92}
+.a4 .ban .pills{position:absolute;left:24px;bottom:16px;display:flex;gap:8px}
+.a4 .ban .pills span{background:rgba(255,255,255,.95);color:var(--ink);border-radius:99px;padding:4px 11px;font-size:11.5px;font-weight:600}
+.a4 .route{display:flex;align-items:center;justify-content:space-between}
+.a4 .stop{text-align:center;width:84px}
+.a4 .dot{width:40px;height:40px;border-radius:50%;margin:0 auto 4px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:17px;font-weight:700;box-shadow:0 4px 10px rgba(14,34,56,.15)}
+.a4 .stop b{display:block;font-size:13.5px}
+.a4 .stop small{font-size:10px;color:var(--muted)}
+.a4 .leg{flex:1;text-align:center;position:relative;padding:0 4px;margin-top:-22px}
+.a4 .leg:before{content:"";position:absolute;left:0;right:0;top:50%;border-top:2px dashed #C9D6E6}
+.a4 .leg span{position:relative;background:#fff;border:1px solid var(--line);border-radius:99px;padding:3px 9px;font-size:10.5px;font-weight:600;color:var(--ink2);display:inline-block;line-height:1.3}
+.a4 .stays{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.a4 .st{border-radius:14px;overflow:hidden;background:#fff;border:1px solid var(--line)}
+.a4 .st .im{height:62px;background-size:cover;background-position:center}
+.a4 .st .im.j{background:linear-gradient(135deg,#FFE7B5,#F6C35B);display:flex;align-items:center;justify-content:center;font-size:24px}
+.a4 .st .tt{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;font-size:13px;font-weight:700}
+.a4 .st .tt i{font-style:normal;font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px}
+.a4 .note{font-size:11.5px;color:var(--ink2);margin-top:8px;font-weight:500}
+.a4 .note b{color:var(--green)}
+.a4 .sg{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.a4 .s{border-radius:12px;overflow:hidden;background:#fff;border:1px solid var(--line)}
+.a4 .s .im{height:62px;background-size:cover;background-position:center;position:relative}
+.a4 .s .im i{position:absolute;left:6px;top:6px;background:rgba(255,255,255,.95);border-radius:6px;font-style:normal;font-size:9.5px;font-weight:700;padding:1px 5px;color:var(--ink2)}
+.a4 .s .nm{padding:4px 7px 5px;font-size:11.5px;font-weight:700;line-height:1.25}
+.a4 .s .nm small{display:block;font-size:9px;font-weight:500;color:var(--muted)}
+.a4 .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.a4 .pl{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);background:#fff;border-radius:11px;padding:6px 11px;margin-top:6px;font-size:12.5px;font-weight:600}
+.a4 .pl b{font-size:15px}
+.a4 .pl.sel{border-color:var(--saffron);background:#FFF6EA}
+.a4 .pl em{font-style:normal;font-size:9.5px;font-weight:700;color:#fff;background:var(--saffron);border-radius:99px;padding:1px 7px;margin-left:6px}
+.a4 .xl{display:flex;flex-wrap:wrap;gap:5px}
+.a4 .xl span{font-size:11px;font-weight:600;color:#B5402F;background:#FFF1EC;border:1px solid #F7D5CA;border-radius:99px;padding:2px 9px}
+.a4.p2 .top img{height:44px}
+.a4.p2 .card{padding:12px 16px}
+.a4.p2 .ch{margin-bottom:7px}
+.a4.p2 .ban{height:126px}.a4.p2 .ban .in2{top:14px}.a4.p2 .ban .pills{bottom:12px}.a4.p2 .pg{padding-top:24px}.a4.p2 .foot{bottom:18px}
+.a4.p2 .ban h3{font-size:28px}
+.a4.p2 .dot{width:34px;height:34px;font-size:15px}
+.a4.p2 .stop b{font-size:13px;line-height:1.2}
+.a4.p2 .st .im{height:48px}
+.a4.p2 .s .im{height:44px}
+.a4.p2 .s .nm{padding:3px 7px 4px;font-size:11px}
+.a4.p2 .pl{padding:4px 11px;margin-top:5px}
+.a4 .cred{font-size:7.5px;color:#9AA7B6;margin-top:6px;line-height:1.35}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="bar"><img src="img/logo.png" alt="Sanzari Tourism"><span class="t">BOOKING RECEIPT</span></header>
+  <main class="wrap">
+    <section class="side">
+      <h2 class="ttl">નવું <span>બુકિંગ</span> ઉમેરો</h2>
+      <p class="lead">વિગત ભરો → PDF બનાવો → ગ્રાહકને WhatsApp પર મોકલો</p>
+
+      <div class="panel">
+        <div class="ph"><i style="background:var(--saffron)">👤</i>ગ્રાહકની વિગત <small>Customer</small></div>
+        <div class="g2">
+          <label class="fl"><span><b>Booking No.</b></span><input class="in" id="bno"></label>
+          <label class="fl"><span><b>તારીખ</b> · Date</span><input class="in" id="bdate" type="date"></label>
+        </div>
+        <label class="fl"><span><b>ગ્રાહકનું નામ</b> · Customer Name *</span><input class="in" id="name" placeholder="દા.ત. Rameshbhai Patel" autocomplete="off"></label>
+        <div class="g2">
+          <label class="fl"><span><b>મોબાઇલ</b> · WhatsApp *</span><input class="in" id="mobile" inputmode="numeric" maxlength="10" placeholder="10 આંકડા"></label>
+          <label class="fl"><span><b>શહેર / ગામ</b> · City</span><input class="in" id="city" placeholder="Bhuj"></label>
+        </div>
+        <div class="fl"><span><b>સભ્યો</b> · Members *</span>
+          <div class="g3">
+            <div><div class="step" data-k="adults"><button type="button" data-d="-1">−</button><output>1</output><button type="button" data-d="1">+</button></div><span style="font-size:11px;color:var(--muted)">મોટા · Adults</span></div>
+            <div><div class="step" data-k="kids"><button type="button" data-d="-1">−</button><output>0</output><button type="button" data-d="1">+</button></div><span style="font-size:11px;color:var(--muted)">બાળક · Kids</span></div>
+            <div><div class="step" data-k="couples"><button type="button" data-d="-1">−</button><output>0</output><button type="button" data-d="1">+</button></div><span style="font-size:11px;color:var(--muted)">Couple Room</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="ph"><i style="background:var(--green)">👥</i>સભ્યોની વિગત <small>Member Details</small></div>
+        <div class="mlist" id="mlist"></div>
+        <button type="button" class="madd" id="maddBtn">+ સભ્ય ઉમેરો &nbsp;·&nbsp; Add Member</button>
+      </div>
+
+      <div class="panel">
+        <div class="ph"><i style="background:var(--blue)">🗓</i>યાત્રાની વિગત <small>Trip</small></div>
+        <div class="fl"><span><b>Departure તારીખ</b> · ભુજથી *</span><div class="chips" id="dates"></div></div>
+        <div class="fl"><span><b>Package</b> · પ્રતિ વ્યક્તિ</span>
+          <div class="seg" id="pkg">
+            <button type="button" class="chip" data-v="sleeper" aria-pressed="true">Sleeper Train<b>₹13,999</b></button>
+            <button type="button" class="chip" data-v="3ac" aria-pressed="false">3AC Train<b>₹15,999</b></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="ph"><i style="background:var(--gold)">₹</i>પેમેન્ટ <small>Payment</small></div>
+        <label class="fl"><span><b>કુલ રકમ</b> · Total <button type="button" class="auto" id="autoBtn" hidden>↺ Auto ગણતરી</button></span><div class="cur"><input class="in" id="total" inputmode="numeric"></div></label>
+        <label class="fl"><span><b>એડવાન્સ જમા</b> · Advance Paid *</span><div class="cur"><input class="in" id="advance" inputmode="numeric" placeholder="0"></div></label>
+        <div class="fl"><span><b>Payment Mode</b></span><div class="chips" id="mode"></div></div>
+        <div class="g2">
+          <label class="fl"><span><b>બાકી રકમ ક્યાં સુધી</b> · Due By</span><input class="in" id="dueby" type="date"></label>
+          <label class="fl"><span><b>Booked By</b> · Employee</span><input class="in" id="emp" placeholder="તમારું નામ"></label>
+        </div>
+        <label class="fl"><span><b>નોંધ</b> · Notes</span><textarea class="in" id="notes" maxlength="90" placeholder="(Optional)"></textarea></label>
+        <div class="sum"><div class="sbox"><span>કુલ રકમ</span><b id="sTotal">₹0</b></div><div class="sbox due" id="sDueBox"><span>બાકી રકમ · Due</span><b id="sDue">₹0</b></div></div>
+        <div class="err" id="err"></div>
+      </div>
+    </section>
+
+    <section id="pvSec" style="display:none;margin-top:16px">
+      <div class="pvh"><b>Preview</b><span>2 Page · A4 PDF</span></div>
+      <div class="pv" id="pv"><div class="scaler" id="scaler"></div></div>
+    </section>
+  </main>
+
+  <nav class="act">
+    <button class="btn ghost" id="newBtn" title="નવું બુકિંગ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+    <button class="btn pri" id="makeBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 12v6M9 15l3 3 3-3"/></svg>PDF બનાવો</button>
+    <button class="btn wa" id="waBtn" hidden><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.5-3.9-4.7-4.1-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.3-.3.6-.3.8-.3h.6c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.3 0 .5l-.4.6-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.4 1.5.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l2 1c.3.1.5.2.5.3.1.2.1.7-.1 1.3z"/></svg>WhatsApp પર મોકલો</button>
+  </nav>
+  <div class="toast" id="toast"></div>
+</div>
+<div id="exp"></div>
+
+<script>
+/* ===== Google Apps Script Web App URL – paste yours after deploying ===== */
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz4P4E7_CEFEBLNpq06XVX-nuA5op0K_NakwmraIaVNrF9Ii-bbf3kRvA2yO3A0s7_bmA/exec';
+
+/* ===== Settings – change here ===== */
+const CFG = {
+  prices: { sleeper: 13999, '3ac': 15999 }, coupleExtra: 3000,
+  dates: ['2026-10-24','2026-11-05','2026-11-15','2026-11-26','2026-12-05','2026-12-15','2026-12-26'],
+  modes: ['Cash','UPI','Bank Transfer','Cheque']
+};
+const IMG = {"srinagar": "img/srinagar.jpg", "dal": "img/dal.jpg", "shankaracharya": "img/shankaracharya.jpg", "shalimar": "img/shalimar.jpg", "mughal": "img/mughal.jpg", "nishat": "img/nishat.jpg", "hazratbal": "img/hazratbal.jpg", "ganderbal": "img/ganderbal.jpg", "sonamarg": "img/sonamarg.jpg", "gulmarg": "img/gulmarg.jpg", "apple": "img/apple.jpg", "saffron": "img/saffron.jpg", "batfactory": "img/batfactory.jpg", "pahalgam": "img/pahalgam.jpg", "aishmuqam": "img/aishmuqam.jpg", "banner": "img/banner.jpg", "logo": "img/logo.png"};
+const CREDITS = "Srinagar: KennyOMG (CC BY-SA 3.0); Dal: Fulvio Spada (CC BY-SA 2.0); Shankaracharya: Divya Gupta (CC BY-SA 3.0); Shalimar: Pradeepkjoshi (CC BY-SA 4.0); Mughal: Harvinder Chandigarh (CC BY 4.0); Nishat: McKay Savage (CC BY 2.0); Hazratbal: Zuck28 (CC BY 4.0); Ganderbal: Rajarshi Mitra (CC BY 2.0); Sonamarg: Ganesh Mohan T / UnpetitproleX (CC BY 4.0); Gulmarg: Zahoor Bhat (CC BY-SA 4.0); Apple: Auli Raha (CC BY-SA 4.0); Saffron: Umarsami (CC BY-SA 4.0); Batfactory: Arv94 (CC BY-SA 4.0); Pahalgam: KennyOMG (CC BY-SA 3.0); Aishmuqam: Sauood07 (CC BY 4.0)";
+const SIGHTS = [['srinagar','શ્રીનગર સિટી','Srinagar City'],['dal','દાલ લેક','Dal Lake'],['shankaracharya','શંકરાચાર્ય મંદિર','Shankaracharya Temple'],['shalimar','શાલીમાર ગાર્ડન','Shalimar Garden'],['mughal','મુગલ ગાર્ડન','Mughal Garden'],['nishat','નિશાત બાગ','Nishat Bagh'],['hazratbal','હઝરતબલ','Hazratbal'],['ganderbal','ગંદરબલ સિંધ નદી','Ganderbal & Sindh River'],['sonamarg','સોનમર્ગ ગ્લેશિયર','Sonamarg Glacier'],['gulmarg','ગુલમર્ગ','Gulmarg Hill Station'],['apple','એપલ વેલી','Apple Valley'],['saffron','કેસર વેલી','Saffron Valley'],['batfactory','બેટ ફેક્ટરી','Bat Factory'],['pahalgam','પહેલગામ','Pahalgam'],['aishmuqam','એશમુકામ','Aishmuqam']];
+
+/* ===== helpers ===== */
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num = v => Math.max(0, parseInt(String(v).replace(/[^\d]/g, '')) || 0);
+const inr = n => n.toLocaleString('en-IN');
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const WD = ['રવિવાર','સોમવાર','મંગળવાર','બુધવાર','ગુરુવાર','શુક્રવાર','શનિવાર'];
+const pd = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
+const fd = s => { if (!s) return ''; const d = pd(s); return `${String(d.getDate()).padStart(2,'0')} ${MON[d.getMonth()]} ${d.getFullYear()}`; };
+const iso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const store = { get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }, set(k,v){ try { localStorage.setItem(k,v); } catch(e){} } };
+function toast(t){ const el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('on'), 2600); }
+
+/* ===== state ===== */
+const S = { adults: 1, kids: 0, couples: 0, pkg: 'sleeper', date: '', mode: 'UPI', manualTotal: false };
+let pdfFile = null;
+let members = []; // [{name, age, type:'adult'|'kid'}]
+
+function nextNo(){ const M=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'],n=new Date(); return `SZ-${M[n.getMonth()]}${String(n.getFullYear()).slice(2)}-${String(n.getDate()).padStart(2,'0')}${String(n.getMonth()+1).padStart(2,'0')}`; }
+function resetForm(){
+  ['name','mobile','city','advance','notes','total'].forEach(k => $(k).value = '');
+  Object.assign(S, { adults: 1, kids: 0, couples: 0, pkg: 'sleeper', date: '', mode: 'UPI', manualTotal: false });
+  $('bno').value = nextNo(); $('bdate').value = iso(new Date()); $('dueby').value = '';
+  $('emp').value = store.get('sz_emp') || '';
+  document.querySelectorAll('.in.bad').forEach(e => e.classList.remove('bad'));
+  $('err').style.display = 'none';
+  members = []; syncMembersUI();
+  invalidate(); syncUI();
+}
+
+/* ===== build controls ===== */
+const today = iso(new Date());
+$('dates').innerHTML = CFG.dates.map(d => { const x = pd(d); return `<button type="button" class="chip" data-v="${d}" ${d < today ? 'disabled' : ''} aria-pressed="false">${String(x.getDate()).padStart(2,'0')} ${MON[x.getMonth()]}<small>${WD[x.getDay()]}</small></button>`; }).join('');
+$('mode').innerHTML = CFG.modes.map(m => `<button type="button" class="chip" data-v="${m}" aria-pressed="false">${m}</button>`).join('');
+$('dates').onclick = e => { const b = e.target.closest('.chip'); if (!b || b.disabled) return; S.date = b.dataset.v; changed(); };
+$('mode').onclick = e => { const b = e.target.closest('.chip'); if (!b) return; S.mode = b.dataset.v; changed(); };
+$('pkg').onclick = e => { const b = e.target.closest('.chip'); if (!b) return; S.pkg = b.dataset.v; changed(); };
+document.querySelectorAll('.step').forEach(st => st.onclick = e => {
+  const b = e.target.closest('button'); if (!b) return; const k = st.dataset.k;
+  const min = k === 'adults' ? 1 : 0; S[k] = Math.max(min, Math.min(40, S[k] + Number(b.dataset.d)));
+  if (k === 'couples') S.couples = Math.min(S.couples, Math.floor((S.adults) / 2));
+  if (k === 'adults') S.couples = Math.min(S.couples, Math.floor(S.adults / 2));
+  if (k === 'adults' || k === 'kids') syncMembersUI();
+  changed();
+});
+function syncMembersUI(){
+  const need = S.adults + S.kids;
+  while(members.length < need){ members.push({name:'', age:'', type: members.length < S.adults ? 'adult' : 'kid'}); }
+  while(members.length > need) members.pop();
+  members.forEach((m,i) => { m.type = i < S.adults ? 'adult' : 'kid'; });
+  renderMembers();
+}
+function renderMembers(){
+  const list = $('mlist');
+  list.innerHTML = '';
+  members.forEach((m,i) => {
+    const row = document.createElement('div');
+    row.className = 'mrow';
+    row.innerHTML = `<input class="in" style="height:38px;font-size:13.5px" placeholder="નામ · Name" value="${esc(m.name)}" data-i="${i}" data-f="name"><input class="in" style="height:38px;text-align:center" placeholder="ઉંમર" inputmode="numeric" maxlength="3" value="${m.age||''}" data-i="${i}" data-f="age"><span class="mtag ${m.type}">${m.type==='adult'?'👤 Adult':'🧒 Kid'}</span><button type="button" class="mrem" data-i="${i}">×</button>`;
+    list.appendChild(row);
+  });
+  list.querySelectorAll('[data-f]').forEach(inp => inp.oninput = e => { members[+e.target.dataset.i][e.target.dataset.f]=e.target.value; invalidate(); });
+  list.querySelectorAll('.mrem').forEach(btn => btn.onclick = e => {
+    const j=+e.currentTarget.dataset.i, t=members[j].type;
+    members.splice(j,1);
+    if(t==='adult') S.adults=Math.max(1,S.adults-1); else S.kids=Math.max(0,S.kids-1);
+    document.querySelectorAll('.step').forEach(st=>st.querySelector('output').textContent=S[st.dataset.k]);
+    renderMembers(); changed(); invalidate();
+  });
+}
+$('maddBtn').onclick = () => {
+  const type = members.filter(m=>m.type==='adult').length < S.adults ? 'adult' : 'kid';
+  if(type==='kid') S.kids++; else S.adults++;
+  members.push({name:'',age:'',type});
+  document.querySelectorAll('.step').forEach(st=>st.querySelector('output').textContent=S[st.dataset.k]);
+  renderMembers(); changed(); invalidate();
+  const rows=$('mlist').querySelectorAll('.mrow'); if(rows.length) rows[rows.length-1].querySelector('[data-f="name"]').focus();
+};
+$('total').oninput = () => { S.manualTotal = true; changed(false); };
+$('autoBtn').onclick = e => { e.preventDefault(); S.manualTotal = false; changed(); };
+['bno','bdate','name','mobile','city','advance','dueby','emp','notes'].forEach(k => $(k).addEventListener('input', () => { $(k).classList.remove('bad'); changed(false); }));
+$('mobile').addEventListener('input', () => { $('mobile').value = $('mobile').value.replace(/\D/g,'').slice(0,10); });
+['advance','total'].forEach(k => $(k).addEventListener('blur', () => { const v = num($(k).value); $(k).value = v ? inr(v) : ''; }));
+
+function calcTotal(){ return (S.adults + S.kids) * CFG.prices[S.pkg] + S.couples * CFG.coupleExtra; }
+function data(){
+  const total = S.manualTotal ? num($('total').value) : calcTotal();
+  const advance = num($('advance').value);
+  return {
+    bno: $('bno').value.trim(), bdate: $('bdate').value, name: $('name').value.trim(), mobile: $('mobile').value.trim(), city: $('city').value.trim(),
+    adults: S.adults, kids: S.kids, couples: S.couples, members: S.adults + S.kids, pkg: S.pkg, date: S.date, mode: S.mode,
+    total, advance, due: Math.max(0, total - advance), dueby: $('dueby').value, emp: $('emp').value.trim(), notes: $('notes').value.trim(),
+    membersList: members.map(m => ({name: m.name.trim(), age: m.age, type: m.type}))
+  };
+}
+function syncUI(){
+  document.querySelectorAll('.step').forEach(st => st.querySelector('output').textContent = S[st.dataset.k]);
+  document.querySelectorAll('#dates .chip').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === S.date));
+  document.querySelectorAll('#mode .chip').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === S.mode));
+  document.querySelectorAll('#pkg .chip').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === S.pkg));
+  if (!S.manualTotal) $('total').value = inr(calcTotal());
+  $('autoBtn').hidden = !S.manualTotal;
+  const d = data();
+  $('sTotal').textContent = '₹' + inr(d.total);
+  $('sDue').textContent = d.due === 0 && d.total > 0 ? 'Fully Paid ✓' : '₹' + inr(d.due);
+  $('sDueBox').className = 'sbox ' + (d.due === 0 && d.total > 0 ? 'paid' : 'due');
+  const complete = d.name && /^\d{10}$/.test(d.mobile) && d.date && d.advance > 0;
+  const pvSec = $('pvSec'); if(pvSec) pvSec.style.display = complete ? 'block' : 'none';
+  if(complete){ render($('scaler'), d); fit(); }
+}
+function invalidate(){ pdfFile = null; $('waBtn').hidden = true; $('makeBtn').hidden = false; }
+function changed(){ invalidate(); syncUI(); }
+
+/* ===== receipt template ===== */
+const V = (v, ph = '—') => v ? `<div class="v">${esc(v)}</div>` : `<div class="v e">${ph}</div>`;
+function header(){ return `<div class="top"><img src="${IMG.logo}"><div class="pill">KASHMIR WINTER TOUR 2026</div></div>`; }
+function footer(d, p){
+  return `<div class="foot"><div class="contact">
+    <div class="cb" style="background:linear-gradient(135deg,#2B7DE9,#1B4F9C)"><small>OFFICE · CALL / WHATSAPP</small><b>63551 35992</b></div>
+    <div class="cb" style="background:linear-gradient(135deg,#F2B020,#B97A00)"><small>BOOKING · CALL / WHATSAPP</small><b>78746 35992</b></div>
+    ${p === 1 ? `<div class="sig"><span>Booked by: <b>${esc(d.emp) || '—'}</b></span><span>Authorised Signature &amp; Stamp</span></div>`
+      : `<div class="sig"><span>Booking No. <b>${esc(d.bno)}</b></span><span>${esc(d.name) || '—'} · ${d.members} સભ્યો</span></div>`}
+  </div><div class="addr"><span><b>Sanzari Tourism</b> · Office 210, Laxmi Chambers, New Station Road, Bhuj, Kutch</span><span class="pno">PAGE ${p}/2 &nbsp;·&nbsp; <span class="since">SINCE 1990</span></span></div></div>`;
+}
+function page1(d){
+  const dd = d.date ? `${fd(d.date)} · ${WD[pd(d.date).getDay()]}` : '';
+  const pk = d.pkg === 'sleeper' ? 'Sleeper Train' : '3AC Train';
+  const room = d.couples ? `4 Bed Deluxe + ${d.couples} Private Couple Room` : '4 Bed Deluxe Room';
+  const paid = d.due === 0 && d.total > 0;
+  const pol = [
+    ['#FFF4D6','#B97A00','48','કલાક પહેલાં','મુસાફરીની તારીખથી 48 કલાક પહેલાં Cancel','48 hrs before travel date · 25% cancellation of advance amount', 25],
+    ['#FFEBD1','#E07B00','24','કલાક પહેલાં','મુસાફરીની તારીખથી 24 કલાક પહેલાં Cancel','24 hrs before travel date · 50% cancellation of advance amount', 50],
+    ['#FFE4DD','#E5533D','0','SAME DAY','મુસાફરીના દિવસે જ Cancel','Same day cancellation · Advance amount non-refundable', 100]];
+  return `<div class="a4"><div class="bg"></div><div class="pg">${header()}
+  <div class="hero"><div>
+    <div class="eb"><div class="tick"><svg width="11" height="11" viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5" stroke="#fff" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>BOOKING CONFIRMED</div>
+    <h1>બુકિંગ <span>કન્ફર્મ</span> છે!</h1>
+    <div class="sub">Sanzari Tourism સાથે કાશ્મીર યાત્રા માટે આપનો આભાર 🙏</div></div>
+    <div class="meta"><span>Booking No.</span>${V(d.bno)}<span>તારીખ / Date</span>${V(fd(d.bdate))}</div></div>
+
+  <div class="r2" style="grid-template-columns:1.12fr 1fr;gap:14px;margin-top:18px">
+    <div class="card"><div class="ch"><div class="ic" style="background:var(--saffron)">👤</div>ગ્રાહકની વિગત <small>Customer</small></div>
+      <div class="l" style="margin-top:0"><b>ગ્રાહકનું નામ</b> · Customer Name</div>${V(d.name)}
+      <div class="r2"><div><div class="l"><b>મોબાઇલ</b> · Mobile</div>${V(d.mobile ? '+91 ' + d.mobile.replace(/(\d{5})(\d+)/,'$1 $2') : '')}</div><div><div class="l"><b>શહેર / ગામ</b> · City</div>${V(d.city)}</div></div>
+      <div class="l"><b>સભ્યો</b> · Members</div>
+      <div class="r3"><div class="v">${d.members}<span class="tag">કુલ</span></div><div class="v">${d.adults}<span class="tag">મોટા</span></div><div class="v">${d.kids}<span class="tag">બાળક</span></div></div>
+      ${d.membersList && d.membersList.filter(m=>m.name).length ? `<div class="l" style="margin-top:8px;font-size:11px;font-weight:600;color:var(--muted)">સભ્ય-સૂચી · MEMBER LIST</div><table style="width:100%;border-collapse:collapse;margin-top:4px">${d.membersList.map((m,i)=>`<tr style="border-bottom:1px solid #ECF0F6"><td style="padding:3px 4px;font-size:11px;color:var(--muted);width:18px">${i+1}</td><td style="padding:3px 6px;font-size:12.5px;font-weight:600">${esc(m.name)||'—'}</td><td style="padding:3px 4px;font-size:11.5px;color:var(--muted);width:36px">${m.age?m.age+' yr':''}</td><td style="padding:3px 4px;text-align:right"><span style="font-size:10px;padding:2px 6px;border-radius:99px;font-weight:600;background:${m.type==='adult'?'#E1EEFD':'#FFF0E0'};color:${m.type==='adult'?'#2B7DE9':'#F08A00'}">${m.type==='adult'?'Adult':'Kid'}</span></td></tr>`).join('')}</table>` : ''}
+      </div>
+    <div class="card"><div class="ch"><div class="ic" style="background:var(--blue)">🗓</div>યાત્રાની વિગત <small>Trip</small></div>
+      <div class="l" style="margin-top:0"><b>Departure તારીખ</b> · ભુજથી</div>${V(dd)}
+      <div class="l"><b>Package</b></div>${V(`${pk} · ₹${inr(CFG.prices[d.pkg])} / વ્યક્તિ`)}
+      <div class="l"><b>Room</b></div>${V(room)}</div>
+  </div>
+
+  <div class="card" style="margin-top:14px"><div class="ch"><div class="ic" style="background:var(--gold)">₹</div>પેમેન્ટની વિગત <small>Payment</small></div>
+    <div class="pay">
+      <div class="pb"><div class="l"><b>કુલ રકમ</b> · Total Amount</div><div class="amt"><small>₹</small>${inr(d.total)}</div></div>
+      <div class="pb adv"><div class="l"><b>એડવાન્સ જમા</b> · Advance Paid</div><div class="amt"><small>₹</small>${inr(d.advance)}</div></div>
+      <div class="pb ${paid ? 'adv' : 'due'}"><div class="l"><b>બાકી રકમ</b> · Due Amount</div><div class="amt">${paid ? 'PAID ✓' : '<small>₹</small>' + inr(d.due)}</div></div>
+    </div>
+    <div class="r3" style="margin-top:2px"><div><div class="l"><b>Payment Mode</b></div>${V(d.mode)}</div><div><div class="l"><b>બાકી રકમ ક્યાં સુધી</b> · Due By</div>${V(paid ? 'Fully Paid' : fd(d.dueby))}</div><div><div class="l"><b>નોંધ</b> · Notes</div>${V(d.notes)}</div></div>
+  </div>
+
+  <div class="card" style="margin-top:14px"><div class="ch"><div class="ic" style="background:var(--coral)">!</div>Cancellation Policy <small>રદ કરવાના નિયમો</small></div>
+    <div class="pol">${pol.map(([bg,c,n,u,gu,en,p]) => `<div class="pr"><div class="badge" style="background:${bg};color:${c}">${n === '0' ? '<span style="font-size:15px">આજે</span>' : n + '<span style="font-size:11px"> hr</span>'}<small>${u}</small></div>
+      <div class="tx">${gu} → Advance રકમના ${p === 100 ? 'પૈસા પરત નહીં મળે' : p + '% કપાશે'}<small>${en}</small></div>
+      <div class="cut" style="color:${c}">${d.advance ? (p === 100 ? 'No Refund' : '− ₹' + inr(Math.round(d.advance * p / 100))) : (p === 100 ? 'No Refund' : p + '%')}<small>${d.advance ? (p === 100 ? 'Advance ₹' + inr(d.advance) : 'Refund ₹' + inr(d.advance - Math.round(d.advance * p / 100))) : 'of Advance'}</small></div></div>`).join('')}</div>
+  </div>
+  </div>${footer(d, 1)}</div>`;
+}
+function page2(d){
+  const stays = [['srinagar','શ્રીનગર','2 Night','#FFEBD1','#F08A00'],['dal','Houseboat','1 Night','#E1EEFD','#2B7DE9'],['pahalgam','પહેલગામ','1 Night','#DDF4E8','#1DAA6B'],[null,'જમ્મુ','1 Night','#FFF4D6','#B97A00']];
+  return `<div class="a4 p2"><div class="bg"></div><div class="pg">${header()}
+  <div class="ban" style="margin-top:12px;background-image:url(${IMG.banner})"><div class="sh"></div>
+    <div class="in2"><div class="k">TOUR DETAILS · પ્રવાસની વિગત</div><h3>Kashmir Winter Tour 2026</h3><p>9 દિવસ · ભુજથી ભુજ · 15 જગ્યા Sightseeing</p></div>
+    <div class="pills"><span>👤 ${esc(d.name) || 'Guest'}</span><span>🗓 ${d.date ? fd(d.date) : 'Departure —'}</span><span>👥 ${d.members} સભ્યો</span></div></div>
+
+  <div class="card" style="margin-top:11px"><div class="ch"><div class="ic" style="background:var(--blue)">➜</div>Route <small>મુસાફરી</small></div>
+    <div class="route">
+      <div class="stop"><div class="dot" style="background:var(--saffron)">ભુ</div><b>ભુજ</b><small>Start</small></div>
+      <div class="leg"><span>AC Sleeper Bus +<br>Sleeper Train</span></div>
+      <div class="stop"><div class="dot" style="background:var(--gold)">જ</div><b>જમ્મુ</b><small>1 Night</small></div>
+      <div class="leg"><span>Private Car<br>6 દિવસ</span></div>
+      <div class="stop"><div class="dot" style="background:var(--blue)">ક</div><b>કાશ્મીર</b><small>4 Night</small></div>
+      <div class="leg"><span>Sleeper Train +<br>Sleeper Bus</span></div>
+      <div class="stop"><div class="dot" style="background:var(--green)">ભુ</div><b>ભુજ</b><small>પરત</small></div>
+    </div></div>
+
+  <div class="card" style="margin-top:11px"><div class="ch"><div class="ic" style="background:var(--saffron)">🏨</div>5 રાત 2 Star Hotel <small>Stay</small></div>
+    <div class="stays">${stays.map(([k,n,t,bg,c]) => `<div class="st">${k ? `<div class="im" style="background-image:url(${IMG[k]})"></div>` : '<div class="im j">🏙️</div>'}<div class="tt">${n}<i style="background:${bg};color:${c}">${t}</i></div></div>`).join('')}</div>
+    <div class="note"><b>✓</b> દરેક હોટલમાં 4 Bed Deluxe Room &nbsp;<b>✓</b> Breakfast અને Dinner સામેલ &nbsp;<b>✓</b> 35 વર્ષના અનુભવ સાથે Tour Management</div></div>
+
+  <div class="card" style="margin-top:11px"><div class="ch"><div class="ic" style="background:var(--green)">📍</div>Sightseeing <small>15 જગ્યા</small></div>
+    <div class="sg">${SIGHTS.map(([k,g,e],i) => `<div class="s"><div class="im" style="background-image:url(${IMG[k]})"><i>${String(i+1).padStart(2,'0')}</i></div><div class="nm">${g}<small>${e}</small></div></div>`).join('')}</div></div>
+
+  <div class="two" style="margin-top:11px">
+    <div class="card"><div class="ch"><div class="ic" style="background:var(--gold)">₹</div>Package Price <small>પ્રતિ વ્યક્તિ</small></div>
+      <div class="pl ${d.pkg === 'sleeper' ? 'sel' : ''}"><span>Sleeper Train સાથે${d.pkg === 'sleeper' ? '<em>આપનું</em>' : ''}</span><b>₹13,999</b></div>
+      <div class="pl ${d.pkg === '3ac' ? 'sel' : ''}"><span>3AC Train સાથે${d.pkg === '3ac' ? '<em>આપનું</em>' : ''}</span><b>₹15,999</b></div>
+      <div class="pl ${d.couples ? 'sel' : ''}"><span>Private Couple Room</span><b>+₹3,000 <small style="font-size:10px;color:var(--muted)">/ couple</small></b></div></div>
+    <div class="card"><div class="ch"><div class="ic" style="background:var(--coral)">✕</div>Package માં નથી <small>Not Included</small></div>
+      <div class="xl">${['શિકારા રાઇડ','ગોંડોલા રાઇડ','ઘોડેસવારી','Union Cab','ગાર્ડન Entry','Shopping','અંગત ખર્ચ'].map(x => `<span>${x}</span>`).join('')}</div>
+      <div class="note" style="margin-top:9px">🪪 યાત્રા દરમિયાન Aadhaar / ID Card સાથે રાખવું.</div></div>
+  </div>
+  </div><div class="foot"><div class="addr" style="margin-top:0"><span><b>Sanzari Tourism</b> · Office 210, Laxmi Chambers, New Station Road, Bhuj, Kutch · <b>📞 63551 35992 · 78746 35992</b></span><span class="pno">PAGE 2/2 &nbsp;·&nbsp; <span class="since">SINCE 1990</span></span></div>
+  <div class="cred">Booking No. ${esc(d.bno)} · ${esc(d.name)} &nbsp;|&nbsp; Photos: Wikimedia Commons — ${esc(CREDITS)}</div></div></div>`;
+}
+function render(el, d){ el.innerHTML = page1(d) + page2(d); }
+
+/* ===== preview scaling ===== */
+function fit(){
+  const pv = $('pv'), sc = $('scaler'); const w = pv.clientWidth; const s = Math.min(1, w / 794);
+  sc.style.transform = `scale(${s})`; pv.style.height = (sc.scrollHeight * s) + 'px';
+}
+addEventListener('resize', fit);
+
+/* ===== validation ===== */
+function validate(d){
+  const errs = [];
+  if (!d.name) { errs.push('ગ્રાહકનું નામ'); $('name').classList.add('bad'); }
+  if (!/^\d{10}$/.test(d.mobile)) { errs.push('10 આંકડાનો મોબાઇલ'); $('mobile').classList.add('bad'); }
+  if (!d.date) errs.push('Departure તારીખ');
+  if (!d.advance) { errs.push('Advance રકમ'); $('advance').classList.add('bad'); }
+  if (d.advance > d.total) { errs.push('Advance કુલ રકમથી વધુ છે'); $('advance').classList.add('bad'); }
+  $('err').style.display = errs.length ? 'block' : 'none';
+  $('err').textContent = errs.length ? '⚠ આ ભરો: ' + errs.join(', ') : '';
+  return !errs.length;
+}
+
+/* ===== PDF ===== */
+async function makePDF(){
+  const d = data(); if (!validate(d)) { toast('⚠ જરૂરી વિગત ભરો'); return; }
+  const btn = $('makeBtn'); btn.disabled = true; btn.lastChild.textContent = 'બની રહી છે…';
+  try {
+    await document.fonts.ready;
+    const exp = $('exp'); render(exp, d);
+    await Promise.all([...exp.querySelectorAll('img')].map(i => i.complete ? 0 : new Promise(r => { i.onload = i.onerror = r; })));
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ unit: 'mm', format: 'a4', compress: true });
+    const pages = exp.querySelectorAll('.a4');
+    for (let i = 0; i < pages.length; i++) {
+      const cv = await html2canvas(pages[i], { scale: 2, useCORS: true, backgroundColor: '#F5F8FC', logging: false, scrollX: 0, scrollY: 0, windowWidth: 1280, windowHeight: 1400 });
+      if (i) pdf.addPage();
+      pdf.addImage(cv.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
+    }
+    exp.innerHTML = '';
+    pdf.setProperties({ title: `Sanzari Tourism – Booking ${d.bno}`, author: 'Sanzari Tourism' });
+    const blob = pdf.output('blob');
+    const fname = `${d.bno}_${d.name.replace(/[^\w઀-૿]+/g, '_')}.pdf`;
+    pdfFile = new File([blob], fname, { type: 'application/pdf' });
+    // save counter + employee name
+    if (d.emp) store.set('sz_emp', d.emp);
+    btn.hidden = true; $('waBtn').hidden = false;
+    toast('✅ PDF તૈયાર છે – Save કરી રહ્યા છીએ…');
+    // Save to Google Sheets + Drive async (non-blocking)
+    if (SCRIPT_URL && SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL_HERE') {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const b64 = reader.result.split(',')[1];
+          const res = await fetch(SCRIPT_URL, {
+            method: 'POST', mode: 'no-cors',
+            body: JSON.stringify({
+              bno: d.bno, bdate: d.bdate, name: d.name, mobile: d.mobile, city: d.city,
+              adults: d.adults, kids: d.kids, couples: d.couples, members: d.members,
+              membersList: JSON.stringify(d.membersList || []),
+              pkg: d.pkg, date: d.date, mode: d.mode, total: d.total,
+              advance: d.advance, due: d.due, dueby: d.dueby, emp: d.emp, notes: d.notes,
+              fname: pdfFile.name, pdfBase64: b64
+            })
+          });
+          toast('✅ PDF તૈયાર – Drive & Sheet માં Save થઈ ✓');
+        } catch(err) { toast('✅ PDF તૈયાર છે – હવે WhatsApp પર મોકલો'); }
+      };
+      reader.readAsDataURL(pdfFile);
+    } else {
+      toast('✅ PDF તૈયાર છે – હવે WhatsApp પર મોકલો');
+    }
+  } catch (e) { console.error(e); toast('PDF બનાવવામાં ભૂલ થઈ, ફરી પ્રયત્ન કરો'); }
+  finally { btn.disabled = false; btn.lastChild.textContent = 'PDF બનાવો'; }
+}
+function message(d){
+  return `નમસ્તે ${d.name} 🙏\nSanzari Tourism માં આપનું *Kashmir Winter Tour 2026* બુકિંગ કન્ફર્મ છે ✅\n\nBooking No: ${d.bno}\nDeparture: ${fd(d.date)} (ભુજથી)\nસભ્યો: ${d.members}\nકુલ રકમ: ₹${inr(d.total)}\nAdvance જમા: ₹${inr(d.advance)}\nબાકી રકમ: ${d.due ? '₹' + inr(d.due) : 'Fully Paid ✓'}\n\nReceipt PDF સાથે મોકલેલ છે.\n— Sanzari Tourism, Bhuj\n📞 63551 35992 | 78746 35992`;
+}
+function download(file){ const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500); }
+async function send(){
+  if (!pdfFile) return; const d = data(); const text = message(d);
+  if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+    try { await navigator.share({ files: [pdfFile], text }); return; }
+    catch (e) { if (e.name === 'AbortError') return; }
+  }
+  // Desktop fallback: download PDF + open WhatsApp chat with the customer
+  download(pdfFile);
+  toast('PDF Download થઈ – WhatsApp chat માં attach કરો');
+  setTimeout(() => window.open(`https://wa.me/91${d.mobile}?text=${encodeURIComponent(text)}`, '_blank'), 600);
+}
+$('makeBtn').onclick = makePDF;
+$('waBtn').onclick = send;
+$('newBtn').onclick = () => { resetForm(); scrollTo({ top: 0, behavior: 'smooth' }); toast('નવું બુકિંગ'); };
+
+resetForm();
+document.fonts && document.fonts.ready.then(fit);
+</script>
+</body>
+</html>
