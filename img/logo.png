@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 50" width="240" height="50">
+  <defs>
+    <linearGradient id="sanzariGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFA826"/>
+      <stop offset="100%" stop-color="#E07B00"/>
+    </linearGradient>
+    <linearGradient id="sunGlow" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#FFD15C"/>
+      <stop offset="100%" stop-color="#FFA826"/>
+    </linearGradient>
+  </defs>
+  <!-- Brand Emblem / Mountains -->
+  <g transform="translate(6, 6)">
+    <circle cx="20" cy="20" r="19" fill="#FFF6EA" stroke="#F3DDA0" stroke-width="1.5"/>
+    <!-- Sun -->
+    <circle cx="20" cy="14" r="6" fill="url(#sunGlow)"/>
+    <!-- Left Mountain Peak -->
+    <path d="M8 29 L16 16 L24 29 Z" fill="url(#sanzariGold)"/>
+    <!-- Right Mountain Peak -->
+    <path d="M19 29 L25 19 L32 29 Z" fill="#0E2238" opacity="0.9"/>
+    <!-- Snow caps -->
+    <path d="M16 16 L13 21 L16 20 L19 21 Z" fill="#FFFFFF"/>
+    <path d="M25 19 L23 23 L25 22 L27 23 Z" fill="#FFFFFF"/>
+  </g>
+  <!-- Brand Typography -->
+  <g transform="translate(56, 0)">
+    <text x="0" y="27" font-family="'Hind Vadodara', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="800" font-size="23" fill="url(#sanzariGold)" letter-spacing="0.2">Sanzari</text>
+    <text x="84" y="27" font-family="'Hind Vadodara', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="700" font-size="23" fill="#0E2238" letter-spacing="0.4">Tourism</text>
+    <text x="1" y="42" font-family="'Hind Vadodara', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="600" font-size="9" fill="#5E6E83" letter-spacing="2.2">ESTD 1990 · BHUJ, KUTCH</text>
+  </g>
+</svg>

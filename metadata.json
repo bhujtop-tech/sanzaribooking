@@ -1,0 +1,8 @@
+{
+  "name": "Sanzari Booking Receipt Generator",
+  "description": "Create, manage, and print travel booking receipts for Sanzari Tourism with PDF export and WhatsApp sharing.",
+  "request_permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

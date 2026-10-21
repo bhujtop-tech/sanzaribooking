@@ -3,7 +3,23 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Sanzari Booking Receipt</title>
+<script>
+(function() {
+  try {
+    var _f = window.fetch ? window.fetch.bind(window) : null;
+    Object.defineProperty(window, 'fetch', {
+      configurable: true,
+      enumerable: true,
+      get: function() { return _f; },
+      set: function(fn) { _f = fn; }
+    });
+  } catch(e) {}
+})();
+</script>
+<title>Sanzari Booking Receipt Generator</title>
+<meta name="description" content="Create, manage, and print travel booking receipts for Sanzari Tourism with PDF export and WhatsApp sharing.">
+<meta property="og:title" content="Sanzari Booking Receipt Generator">
+<meta property="og:description" content="Create, manage, and print travel booking receipts for Sanzari Tourism with PDF export and WhatsApp sharing.">
 <meta name="theme-color" content="#F5F8FC">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,8 +37,10 @@ button,input,select,textarea{font:inherit;color:inherit}
 .bar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;background:rgba(245,248,252,.78);backdrop-filter:saturate(1.6) blur(16px);-webkit-backdrop-filter:saturate(1.6) blur(16px);border-bottom:1px solid rgba(14,34,56,.06)}
 .bar img{height:34px;display:block}
 .bar .t{font-size:12px;font-weight:600;letter-spacing:1.4px;color:var(--goldDeep);background:var(--goldSoft);border:1px solid #F3DDA0;padding:5px 12px;border-radius:99px;white-space:nowrap}
-.wrap{max-width:1240px;margin:0 auto;padding:18px 16px;display:grid;grid-template-columns:minmax(0,1fr);gap:22px}
-@media(min-width:1000px){.wrap{grid-template-columns:minmax(0,560px)}.side{position:static}}
+.admin-link-btn{font-size:12px;font-weight:700;color:var(--blue);background:#EBF3FE;border:1px solid rgba(43,125,233,.25);padding:5px 12px;border-radius:99px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .15s;text-decoration:none}
+.admin-link-btn:hover{background:var(--blue);color:#fff}
+.wrap{max-width:620px;margin:0 auto;padding:18px 16px;display:flex;flex-direction:column;gap:18px;width:100%}
+.side{width:100%}
 h2.ttl{font-size:26px;line-height:1.15;font-weight:700;letter-spacing:-.2px}
 h2.ttl span{color:var(--saffron)}
 .lead{color:var(--muted);font-size:14px;margin-top:4px}
@@ -55,6 +73,7 @@ textarea.in{height:64px;padding-top:10px;resize:vertical}
 .mrow{display:grid;grid-template-columns:1fr 58px auto 30px;gap:6px;align-items:center}
 .mtag{font-size:11px;padding:3px 9px;border-radius:99px;font-weight:600;white-space:nowrap;text-align:center}
 .mtag.adult{background:#E1EEFD;color:var(--blue)}.mtag.kid{background:#FFF0E0;color:var(--saffron)}
+.mtag.kid-mid{background:#E6F4EA;color:var(--green)}.mtag.infant{background:#F3E8FF;color:#8B5CF6}
 .mrem{width:28px;height:28px;border:0;background:none;font-size:18px;cursor:pointer;color:var(--coral);display:flex;align-items:center;justify-content:center}
 .madd{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;font-size:13.5px;font-weight:700;color:var(--blue);background:none;border:1.5px dashed rgba(43,125,233,.35);border-radius:12px;padding:9px 12px;cursor:pointer;width:100%;transition:all .15s}
 .madd:hover{background:rgba(43,125,233,.05);border-color:var(--blue)}
@@ -67,8 +86,30 @@ textarea.in{height:64px;padding-top:10px;resize:vertical}
 .auto{font-size:11.5px;color:var(--blue);background:none;border:0;cursor:pointer;font-weight:600;float:right}
 .err{color:var(--coral);font-size:13px;font-weight:600;margin-top:10px;display:none}
 
+/* ---------- 3-STEP MULTI-STEP PROCESS ---------- */
+.stepper-head{margin-top:14px}
+.stepper-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:rgba(255,255,255,.9);border:1px solid rgba(227,234,243,.9);border-radius:18px;padding:6px;box-shadow:0 4px 16px rgba(14,34,56,.05)}
+.step-tab{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 4px;border-radius:12px;border:0;background:none;cursor:pointer;transition:all .2s ease;color:var(--muted);outline:none}
+.step-tab .s-num{width:22px;height:22px;border-radius:50%;background:#E3EAF3;color:var(--muted);font-size:11.5px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.step-tab .s-lbl{font-size:12px;font-weight:600;white-space:nowrap}
+.step-tab.active{background:#FFF6EA;color:var(--goldDeep);box-shadow:0 2px 8px rgba(240,138,0,.12)}
+.step-tab.active .s-num{background:var(--saffron);color:#fff}
+.step-tab.done .s-num{background:var(--green);color:#fff}
+.step-progress{height:4px;background:#E3EAF3;border-radius:99px;margin-top:8px;overflow:hidden}
+.step-progress-fill{height:100%;background:linear-gradient(90deg,var(--saffron),var(--gold));transition:width .3s cubic-bezier(.4,0,.2,1);width:33.33%}
+.step-badge{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;color:var(--goldDeep);background:var(--goldSoft);border:1px solid #F3DDA0;padding:3px 10px;border-radius:99px;margin-bottom:8px}
+
+.form-step{display:none;animation:stepIn .22s ease-out}
+.form-step.active{display:block}
+@keyframes stepIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+.step-nav-bar{display:flex;gap:10px;margin-top:16px}
+.btn-back{background:#fff;border:1px solid var(--line);color:var(--ink2);height:46px;border-radius:14px;font-weight:700;font-size:14px;padding:0 16px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .15s}
+.btn-next{flex:1;background:linear-gradient(135deg,#F5A623,#E07B00);color:#fff;border:0;height:46px;border-radius:14px;font-weight:700;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 6px 16px rgba(240,138,0,.3);transition:transform .12s,opacity .2s}
+.btn-next:active,.btn-back:active{transform:scale(.97)}
+
 /* action bar */
-.act{position:fixed;left:50%;bottom:max(14px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:30;display:flex;gap:8px;padding:8px;border-radius:22px;background:rgba(255,255,255,.72);backdrop-filter:saturate(1.8) blur(18px);-webkit-backdrop-filter:saturate(1.8) blur(18px);border:1px solid rgba(255,255,255,.9);box-shadow:0 12px 34px rgba(14,34,56,.16);width:min(560px,calc(100% - 24px))}
+.act{position:fixed;left:50%;bottom:max(14px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:30;display:flex;gap:8px;padding:8px;border-radius:22px;background:rgba(255,255,255,.88);backdrop-filter:saturate(1.8) blur(18px);-webkit-backdrop-filter:saturate(1.8) blur(18px);border:1px solid rgba(255,255,255,.9);box-shadow:0 12px 34px rgba(14,34,56,.16);width:min(620px,calc(100% - 24px))}
 .btn{flex:1;height:50px;border:0;border-radius:15px;font-weight:700;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;transition:transform .12s,opacity .2s}
 .btn:active{transform:scale(.97)}
 .btn.pri{background:linear-gradient(135deg,#F5A623,#E07B00);color:#fff;box-shadow:0 6px 16px rgba(240,138,0,.35)}
@@ -177,77 +218,167 @@ textarea.in{height:64px;padding-top:10px;resize:vertical}
 .a4 .pl em{font-style:normal;font-size:9.5px;font-weight:700;color:#fff;background:var(--saffron);border-radius:99px;padding:1px 7px;margin-left:6px}
 .a4 .xl{display:flex;flex-wrap:wrap;gap:5px}
 .a4 .xl span{font-size:11px;font-weight:600;color:#B5402F;background:#FFF1EC;border:1px solid #F7D5CA;border-radius:99px;padding:2px 9px}
-.a4.p2 .top img{height:44px}
-.a4.p2 .card{padding:12px 16px}
-.a4.p2 .ch{margin-bottom:7px}
-.a4.p2 .ban{height:126px}.a4.p2 .ban .in2{top:14px}.a4.p2 .ban .pills{bottom:12px}.a4.p2 .pg{padding-top:24px}.a4.p2 .foot{bottom:18px}
-.a4.p2 .ban h3{font-size:28px}
-.a4.p2 .dot{width:34px;height:34px;font-size:15px}
-.a4.p2 .stop b{font-size:13px;line-height:1.2}
-.a4.p2 .st .im{height:48px}
-.a4.p2 .s .im{height:44px}
-.a4.p2 .s .nm{padding:3px 7px 4px;font-size:11px}
-.a4.p2 .pl{padding:4px 11px;margin-top:5px}
-.a4 .cred{font-size:7.5px;color:#9AA7B6;margin-top:6px;line-height:1.35}
+.a4.p2 .top img{height:38px}
+.a4.p2 .card{padding:8px 12px;margin-top:6px}
+.a4.p2 .ch{margin-bottom:4px;font-size:12px}
+.a4.p2 .ban{height:90px;margin-top:6px}.a4.p2 .ban .in2{top:10px}.a4.p2 .ban .pills{bottom:8px}.a4.p2 .pg{padding:18px 32px 60px}.a4.p2 .foot{bottom:12px;left:32px;right:32px}
+.a4.p2 .ban h3{font-size:22px}
+.a4.p2 .dot{width:28px;height:28px;font-size:13px}
+.a4.p2 .stop b{font-size:12px;line-height:1.2}
+.a4.p2 .st .im{height:36px}
+.a4.p2 .s .im{height:34px}
+.a4.p2 .s .nm{padding:2px 5px 3px;font-size:10px;line-height:1.15}
+.a4.p2 .pl{padding:3px 8px;margin-top:3px;font-size:11px}
+.a4 .cred{font-size:7px;color:#9AA7B6;margin-top:4px;line-height:1.2}
 </style>
 </head>
 <body>
 <div class="app">
-  <header class="bar"><img src="img/logo.png" alt="Sanzari Tourism"><span class="t">BOOKING RECEIPT</span></header>
+  <header class="bar">
+    <img src="/img/logo.svg" alt="Sanzari Tourism" style="height:36px;width:auto;display:block" onerror="this.onerror=null;this.src='img/logo.svg'">
+    <div style="display:flex;align-items:center;gap:8px">
+      <a href="admin.html" class="admin-link-btn" title="Go to Admin Panel">🔐 Admin</a>
+      <span class="t">RECEIPT</span>
+    </div>
+  </header>
   <main class="wrap">
     <section class="side">
-      <h2 class="ttl">નવું <span>બુકિંગ</span> ઉમેરો</h2>
-      <p class="lead">વિગત ભરો → PDF બનાવો → ગ્રાહકને WhatsApp પર મોકલો</p>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <h2 class="ttl">નવું <span>બુકિંગ</span> ઉમેરો</h2>
+        <a href="admin.html" style="font-size:12px;font-weight:700;color:var(--blue);background:#EBF3FE;border:1px solid rgba(43,125,233,.25);padding:6px 12px;border-radius:10px;text-decoration:none;white-space:nowrap">🔐 Admin Panel →</a>
+      </div>
+      <p class="lead">3 સ્ટેપમાં સરળ બુકિંગ રસીદ બનાવો</p>
 
-      <div class="panel">
-        <div class="ph"><i style="background:var(--saffron)">👤</i>ગ્રાહકની વિગત <small>Customer</small></div>
-        <div class="g2">
-          <label class="fl"><span><b>Booking No.</b></span><input class="in" id="bno"></label>
-          <label class="fl"><span><b>તારીખ</b> · Date</span><input class="in" id="bdate" type="date"></label>
+      <!-- Stepper Header -->
+      <div class="stepper-head">
+        <div class="stepper-bar">
+          <button type="button" class="step-tab active" data-step="1" id="tabStep1">
+            <span class="s-num">1</span>
+            <span class="s-lbl">👤 ગ્રાહક &amp; યાત્રા</span>
+          </button>
+          <button type="button" class="step-tab" data-step="2" id="tabStep2">
+            <span class="s-num">2</span>
+            <span class="s-lbl">🚂 પેકેજ</span>
+          </button>
+          <button type="button" class="step-tab" data-step="3" id="tabStep3">
+            <span class="s-num">3</span>
+            <span class="s-lbl">₹ પેમેન્ટ</span>
+          </button>
         </div>
-        <label class="fl"><span><b>ગ્રાહકનું નામ</b> · Customer Name *</span><input class="in" id="name" placeholder="દા.ત. Rameshbhai Patel" autocomplete="off"></label>
-        <div class="g2">
-          <label class="fl"><span><b>મોબાઇલ</b> · WhatsApp *</span><input class="in" id="mobile" inputmode="numeric" maxlength="10" placeholder="10 આંકડા"></label>
-          <label class="fl"><span><b>શહેર / ગામ</b> · City</span><input class="in" id="city" placeholder="Bhuj"></label>
+        <div class="step-progress">
+          <div class="step-progress-fill" id="stepProgressFill"></div>
         </div>
-        <div class="fl"><span><b>સભ્યો</b> · Members *</span>
-          <div class="g3">
-            <div><div class="step" data-k="adults"><button type="button" data-d="-1">−</button><output>1</output><button type="button" data-d="1">+</button></div><span style="font-size:11px;color:var(--muted)">મોટા · Adults</span></div>
-            <div><div class="step" data-k="kids"><button type="button" data-d="-1">−</button><output>0</output><button type="button" data-d="1">+</button></div><span style="font-size:11px;color:var(--muted)">બાળક · Kids</span></div>
-            <div><div class="step" data-k="couples"><button type="button" data-d="-1">−</button><output>0</output><button type="button" data-d="1">+</button></div><span style="font-size:11px;color:var(--muted)">Couple Room</span></div>
+      </div>
+
+      <!-- Step 1: Customer & Tour Details -->
+      <div class="form-step active" id="fstep1">
+        <div class="panel">
+          <div class="ph"><i style="background:var(--saffron)">👤</i>ગ્રાહક અને યાત્રા તારીખ <small>Step 1/3: Customer &amp; Tour Date</small></div>
+          <div class="g2" style="align-items:flex-end">
+            <label class="fl" style="margin-top:0"><span><b>Booking No.</b></span><input class="in" id="bno"></label>
+            <div class="fl" style="margin-top:0"><span><b>ટુર ટાઈપ</b> · Tour Type *</span>
+              <div class="seg" id="tourType">
+                <button type="button" class="chip" data-v="group" aria-pressed="true" style="padding:9px 6px;text-align:center">👥 ગૃપ ટુર</button>
+                <button type="button" class="chip" data-v="private" aria-pressed="false" style="padding:9px 6px;text-align:center">🚘 પ્રાઇવેટ</button>
+              </div>
+            </div>
+          </div>
+          <!-- Hidden issuance date -->
+          <input type="hidden" id="bdate">
+
+          <!-- Group Departure Dates Chips -->
+          <div class="fl" id="groupDatesBox" style="margin-top:12px">
+            <span><b>Departure તારીખ</b> · ભુજથી ઉપડવાની તારીખ (ગૃપ ટુર) *</span>
+            <div class="chips" id="dates"></div>
+          </div>
+
+          <!-- Private Tour Custom Date Picker -->
+          <div class="fl" id="pvtDateBox" style="margin-top:12px;display:none">
+            <span><b>Departure તારીખ</b> · મુસાફરી શરૂ તારીખ (પ્રાઇવેટ ટુર) *</span>
+            <input class="in" id="pvtDate" type="date">
+          </div>
+
+          <div style="height:1px;background:var(--line);margin:14px 0 6px"></div>
+
+          <label class="fl"><span><b>ગ્રાહકનું નામ</b> · Customer Name *</span><input class="in" id="name" placeholder="દા.ત. Rameshbhai Patel" autocomplete="off"></label>
+          <div class="g2">
+            <label class="fl"><span><b>મોબાઇલ</b> · WhatsApp *</span><input class="in" id="mobile" inputmode="numeric" maxlength="10" placeholder="10 આંકડા"></label>
+            <label class="fl"><span><b>શહેર / ગામ</b> · City</span><input class="in" id="city" placeholder="Bhuj"></label>
+          </div>
+          <div class="fl"><span><b>સભ્યો</b> · Members *</span>
+            <div class="g3">
+              <div><div class="step" data-k="adults"><button type="button" data-d="-1">−</button><output>1</output><button type="button" data-d="1">+</button></div><span style="font-size:11px;color:var(--muted)">મોટા · Adults</span></div>
+              <div><div class="step" data-k="kids"><button type="button" data-d="-1">−</button><output>0</output><button type="button" data-d="1">+</button></div><span style="font-size:11px;color:var(--muted)">બાળક · Kids</span></div>
+              <div><div class="step" data-k="couples"><button type="button" data-d="-1">−</button><output>0</output><button type="button" data-d="1">+</button></div><span style="font-size:11px;color:var(--muted)">Couple Room</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="ph"><i style="background:var(--green)">👥</i>સભ્યોની વિગત <small>Member Details</small></div>
+          <div class="mlist" id="mlist"></div>
+          <button type="button" class="madd" id="maddBtn">+ સભ્ય ઉમેરો &nbsp;·&nbsp; Add Member</button>
+        </div>
+
+      </div>
+
+      <!-- Step 2: Package & Accommodations -->
+      <div class="form-step" id="fstep2">
+        <div class="panel">
+          <div class="ph"><i style="background:var(--blue)">🚂</i>ટ્રેન અને પેકેજ પસંદગી <small>Step 2/3: Train &amp; Package</small></div>
+
+          <div class="fl"><span><b>ટ્રેન ક્લાસ &amp; પેકેજ દર</b> · પ્રતિ પુખ્ત વ્યક્તિ (Adult Fare) *</span>
+            <div class="seg" id="pkg">
+              <button type="button" class="chip" data-v="sleeper" aria-pressed="true" style="padding:14px 12px">
+                Sleeper Train Package
+                <b style="font-size:19px;color:var(--saffron);margin-top:4px">₹13,999 <small style="font-size:12px;color:var(--muted);font-weight:500">/ વ્યક્તિ</small></b>
+                <small style="margin-top:3px">Standard Sleeper Class Train</small>
+              </button>
+              <button type="button" class="chip" data-v="3ac" aria-pressed="false" style="padding:14px 12px">
+                3AC Train Package
+                <b style="font-size:19px;color:var(--blue);margin-top:4px">₹15,999 <small style="font-size:12px;color:var(--muted);font-weight:500">/ વ્યક્તિ</small></b>
+                <small style="margin-top:3px">Comfort 3-Tier AC Train</small>
+              </button>
+            </div>
+          </div>
+
+          <div style="background:#F6F9FC;border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-top:14px">
+            <div style="font-size:12.5px;font-weight:700;color:var(--ink2);margin-bottom:8px">✅ પેકેજમાં સામેલ મુખ્ય સુવિધાઓ:</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:12px;color:var(--muted)">
+              <div>✓ ભુજ - દિલ્હી - જમ્મુ ટ્રેન ટિકિટ</div>
+              <div>✓ શ્રીનગરમાં 3-Star ડિલક્સ હોટેલ</div>
+              <div>✓ દાલ લેક 1 રાત લગ્ઝરી હાઉસબોટ</div>
+              <div>✓ ટેમ્પો ટ્રાવેલર સાઇટસીઇંગ</div>
+              <div>✓ 1 કલાક ફ્રી શિકારા રાઈડ</div>
+              <div>✓ સવારનો નાસ્તો &amp; શુદ્ધ શાકાહારી ડિનર</div>
+            </div>
+          </div>
+
+          <div style="margin-top:14px;background:#FFF9EE;border:1px solid #F6DDB0;border-radius:12px;padding:10px 12px;font-size:12px;color:#8F5800;line-height:1.4">
+            💡 <b>ઓટો ગણતરી નોંધ:</b> બાળકના દર (5-7 વર્ષ: 50%, 8-11 વર્ષ: 75%) તેમજ સેપરેટ કપલ રૂમ (+₹4,000) આગલા પેમેન્ટ સ્ટેપમાં આપોઆપ ઉમેરાઈ જશે.
           </div>
         </div>
       </div>
 
-      <div class="panel">
-        <div class="ph"><i style="background:var(--green)">👥</i>સભ્યોની વિગત <small>Member Details</small></div>
-        <div class="mlist" id="mlist"></div>
-        <button type="button" class="madd" id="maddBtn">+ સભ્ય ઉમેરો &nbsp;·&nbsp; Add Member</button>
-      </div>
-
-      <div class="panel">
-        <div class="ph"><i style="background:var(--blue)">🗓</i>યાત્રાની વિગત <small>Trip</small></div>
-        <div class="fl"><span><b>Departure તારીખ</b> · ભુજથી *</span><div class="chips" id="dates"></div></div>
-        <div class="fl"><span><b>Package</b> · પ્રતિ વ્યક્તિ</span>
-          <div class="seg" id="pkg">
-            <button type="button" class="chip" data-v="sleeper" aria-pressed="true">Sleeper Train<b>₹13,999</b></button>
-            <button type="button" class="chip" data-v="3ac" aria-pressed="false">3AC Train<b>₹15,999</b></button>
+      <!-- Step 3: Payment & Summary -->
+      <div class="form-step" id="fstep3">
+        <div class="panel">
+          <div class="ph"><i style="background:var(--gold)">₹</i>પેમેન્ટ ની વિગત <small>Step 3/3: Payment</small></div>
+          <label class="fl"><span><b>કુલ રકમ</b> · Total <button type="button" class="auto" id="autoBtn" hidden>↺ Auto ગણતરી</button></span><div class="cur"><input class="in" id="total" inputmode="numeric"></div></label>
+          <label class="fl"><span><b>એડવાન્સ જમા</b> · Advance Paid *</span><div class="cur"><input class="in" id="advance" inputmode="numeric" placeholder="0"></div></label>
+          <div class="fl"><span><b>Payment Mode</b></span><div class="chips" id="mode"></div></div>
+          <div class="g2">
+            <label class="fl"><span><b>બાકી રકમ ક્યાં સુધી</b> · Due By</span><input class="in" id="dueby" type="date"></label>
+            <label class="fl"><span><b>Booked By</b> · Employee</span><input class="in" id="emp" placeholder="તમારું નામ"></label>
+          </div>
+          <label class="fl"><span><b>નોંધ</b> · Notes</span><textarea class="in" id="notes" maxlength="90" placeholder="(Optional)"></textarea></label>
+          <div class="sum"><div class="sbox"><span>કુલ રકમ</span><b id="sTotal">₹0</b></div><div class="sbox due" id="sDueBox"><span>બાકી રકમ · Due</span><b id="sDue">₹0</b></div></div>
+          <div class="err" id="err"></div>
+          <div style="margin-top:14px;display:flex;align-items:center;gap:8px;font-size:11.5px;color:#0F5132;background:#EBF9F1;border:1px solid #BADBCC;padding:8px 12px;border-radius:12px;line-height:1.35">
+            <span style="font-size:14px;flex-shrink:0">🟢</span>
+            <span><b>Auto Sync Active:</b> Firebase Firestore &amp; <b>sanzariaccount.vercel.app</b> સાથે રિયલ-ટાઇમ કનેક્ટેડ છે.</span>
           </div>
         </div>
-      </div>
-
-      <div class="panel">
-        <div class="ph"><i style="background:var(--gold)">₹</i>પેમેન્ટ <small>Payment</small></div>
-        <label class="fl"><span><b>કુલ રકમ</b> · Total <button type="button" class="auto" id="autoBtn" hidden>↺ Auto ગણતરી</button></span><div class="cur"><input class="in" id="total" inputmode="numeric"></div></label>
-        <label class="fl"><span><b>એડવાન્સ જમા</b> · Advance Paid *</span><div class="cur"><input class="in" id="advance" inputmode="numeric" placeholder="0"></div></label>
-        <div class="fl"><span><b>Payment Mode</b></span><div class="chips" id="mode"></div></div>
-        <div class="g2">
-          <label class="fl"><span><b>બાકી રકમ ક્યાં સુધી</b> · Due By</span><input class="in" id="dueby" type="date"></label>
-          <label class="fl"><span><b>Booked By</b> · Employee</span><input class="in" id="emp" placeholder="તમારું નામ"></label>
-        </div>
-        <label class="fl"><span><b>નોંધ</b> · Notes</span><textarea class="in" id="notes" maxlength="90" placeholder="(Optional)"></textarea></label>
-        <div class="sum"><div class="sbox"><span>કુલ રકમ</span><b id="sTotal">₹0</b></div><div class="sbox due" id="sDueBox"><span>બાકી રકમ · Due</span><b id="sDue">₹0</b></div></div>
-        <div class="err" id="err"></div>
       </div>
     </section>
 
@@ -259,24 +390,179 @@ textarea.in{height:64px;padding-top:10px;resize:vertical}
 
   <nav class="act">
     <button class="btn ghost" id="newBtn" title="નવું બુકિંગ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
-    <button class="btn pri" id="makeBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 12v6M9 15l3 3 3-3"/></svg>PDF બનાવો</button>
+    <button class="btn ghost" id="actBackBtn" onclick="prevStep()" hidden>← પાછળ</button>
+    <button class="btn pri" id="actNextBtn" onclick="nextStep()">આગળ (Step 2) →</button>
+    <button class="btn pri" id="makeBtn" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 12v6M9 15l3 3 3-3"/></svg>PDF બનાવો</button>
     <button class="btn wa" id="waBtn" hidden><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.5-3.9-4.7-4.1-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.3-.3.6-.3.8-.3h.6c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.3 0 .5l-.4.6-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.4 1.5.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l2 1c.3.1.5.2.5.3.1.2.1.7-.1 1.3z"/></svg>WhatsApp પર મોકલો</button>
   </nav>
   <div class="toast" id="toast"></div>
 </div>
+
+<!-- WhatsApp Language Selection Modal -->
+<div id="waLangModal" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(14,34,56,0.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px">
+  <div style="background:#fff;border-radius:24px;padding:26px;width:min(420px,100%);box-shadow:0 16px 40px rgba(14,34,56,0.22);text-align:center">
+    <div style="width:56px;height:56px;border-radius:18px;background:#E9F8F0;color:var(--wa);font-size:28px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px">💬</div>
+    <h3 style="font-size:20px;font-weight:700;color:var(--ink)">WhatsApp મેસેજ મોકલો</h3>
+    <p style="font-size:13.5px;color:var(--muted);margin-top:4px">મેસેજ કઈ ભાષામાં મોકલવો છે? / Select Language:</p>
+    
+    <div style="display:flex;flex-direction:column;gap:12px;margin-top:20px">
+      <button type="button" id="btnShareGu" onclick="doShareWhatsApp('gu')" style="height:50px;border-radius:14px;border:1.5px solid var(--wa);background:#E9F8F0;color:#0F5132;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 12px rgba(37,211,102,0.2)">
+        🇮🇳 ગુજરાતી મેસેજ (Gujarati)
+      </button>
+      <button type="button" id="btnShareEn" onclick="doShareWhatsApp('en')" style="height:50px;border-radius:14px;border:1.5px solid var(--blue);background:#EBF3FE;color:var(--blue);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 12px rgba(43,125,233,0.2)">
+        🇬🇧 English Message
+      </button>
+    </div>
+    <button type="button" onclick="closeWaLangModal()" style="margin-top:16px;background:none;border:0;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;padding:6px 12px">રદ કરો (Cancel)</button>
+  </div>
+</div>
+
 <div id="exp"></div>
 
 <script>
 /* ===== Google Apps Script Web App URL – paste yours after deploying ===== */
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz4P4E7_CEFEBLNpq06XVX-nuA5op0K_NakwmraIaVNrF9Ii-bbf3kRvA2yO3A0s7_bmA/exec';
 
-/* ===== Settings – change here ===== */
-const CFG = {
-  prices: { sleeper: 13999, '3ac': 15999 }, coupleExtra: 3000,
-  dates: ['2026-10-24','2026-11-05','2026-11-15','2026-11-26','2026-12-05','2026-12-15','2026-12-26'],
-  modes: ['Cash','UPI','Bank Transfer','Cheque']
+/* ===== Firebase Firestore & sanzariaccount.vercel.app Auto-Sync ===== */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBFBpg8UBk3Tfzj0cvEIjn34nP6Fn9StPc",
+  authDomain: "gen-lang-client-0782309990.firebaseapp.com",
+  databaseURL: "https://gen-lang-client-0782309990-default-rtdb.firebaseio.com",
+  projectId: "gen-lang-client-0782309990",
+  storageBucket: "gen-lang-client-0782309990.firebasestorage.app",
+  messagingSenderId: "1015857539906",
+  appId: "1:1015857539906:web:29a0cc8837076d0aad36db"
 };
-const IMG = {"srinagar": "img/srinagar.jpg", "dal": "img/dal.jpg", "shankaracharya": "img/shankaracharya.jpg", "shalimar": "img/shalimar.jpg", "mughal": "img/mughal.jpg", "nishat": "img/nishat.jpg", "hazratbal": "img/hazratbal.jpg", "ganderbal": "img/ganderbal.jpg", "sonamarg": "img/sonamarg.jpg", "gulmarg": "img/gulmarg.jpg", "apple": "img/apple.jpg", "saffron": "img/saffron.jpg", "batfactory": "img/batfactory.jpg", "pahalgam": "img/pahalgam.jpg", "aishmuqam": "img/aishmuqam.jpg", "banner": "img/banner.jpg", "logo": "img/logo.png"};
+const FIRESTORE_BASE = `https://firestore.googleapis.com/v1/projects/${FIREBASE_CONFIG.projectId}/databases/(default)/documents`;
+
+const TOUR_BATCH_MAP = {
+  '2026-10-24': { id: 'zHcgMAqpPEQF3Rf7sFev', title: '24 october' },
+  '2026-11-05': { id: 'gFJbkRzokyyWP8ukPrvb', title: '05 november' },
+  '2026-11-15': { id: 'LWN4zza3llLlhLR1mZRx', title: '15 november' },
+  '2026-11-26': { id: '9Tyolx8LL16EslqjkuCo', title: '26 november' },
+  '2026-12-05': { id: 'MVrV063TvgmJAHm9DywO', title: '05 december' },
+  '2026-12-15': { id: 'O4boHaFxFaagvzv31FXt', title: '15 december' },
+  '2026-12-26': { id: 'osrUpEumVMdZJkgNEdeJ', title: '26 december' }
+};
+
+async function syncBookingToFirestore(d) {
+  const batchInfo = TOUR_BATCH_MAP[d.date] || { id: '', title: d.date ? fd(d.date) : '' };
+  const now = new Date().toISOString();
+  const paymentStatus = d.due === 0 && d.total > 0 ? 'Paid' : (d.advance > 0 ? 'Partial' : 'Pending');
+  
+  const membersValues = (d.membersList && d.membersList.length ? d.membersList : [
+    { name: d.name, age: '', type: 'adult' }
+  ]).map(m => ({
+    mapValue: {
+      fields: {
+        name: { stringValue: m.name || '' },
+        age: { stringValue: String(m.age || '') },
+        gender: { stringValue: 'Male' },
+        type: { stringValue: m.type || 'adult' }
+      }
+    }
+  }));
+
+  const payload = {
+    fields: {
+      bookingNumber: { stringValue: d.bno || ('SZ-TOUR-' + Math.floor(1000 + Math.random() * 9000)) },
+      customerName: { stringValue: d.name },
+      customerPhone: { stringValue: d.mobile },
+      city: { stringValue: d.city || 'Bhuj' },
+      destination: { stringValue: 'Kashmir' },
+      tourTitle: { stringValue: batchInfo.title || (d.tourType === 'private' ? 'Kashmir Private Tour' : 'Kashmir Winter Tour 2026') },
+      tourBatchTitle: { stringValue: batchInfo.title || (d.date ? fd(d.date) : '') },
+      tourBatchId: { stringValue: batchInfo.id || '' },
+      tourType: { stringValue: d.tourType === 'private' ? 'Private Tour' : 'Group Tour' },
+      tourDate: { stringValue: d.date || '' },
+      travelClass: { stringValue: d.pkg === '3ac' ? 'AC Train' : 'Sleeper Train' },
+      packageCategory: { stringValue: 'Deluxe' },
+      membersCount: { integerValue: String(d.members || 1) },
+      adultsCount: { integerValue: String(d.adults || 1) },
+      kidsCount: { integerValue: String(d.kids || 0) },
+      couplesCount: { integerValue: String(d.couples || 0) },
+      members: { arrayValue: { values: membersValues } },
+      totalAmount: { integerValue: String(d.total || 0) },
+      advancePaid: { integerValue: String(d.advance || 0) },
+      pendingAmount: { integerValue: String(d.due || 0) },
+      balanceDue: { integerValue: String(d.due || 0) },
+      paymentStatus: { stringValue: paymentStatus },
+      paymentMode: { stringValue: d.mode || 'UPI' },
+      paymentMethod: { stringValue: d.mode || 'UPI' },
+      walletName: { stringValue: 'Rizwan (Tour)' },
+      bookingStatus: { stringValue: 'Confirmed' },
+      bookedBy: { stringValue: d.emp || 'Office Staff' },
+      specialNotes: { stringValue: d.notes || '' },
+      monthKey: { stringValue: d.date ? d.date.slice(0, 7) : '' },
+      source: { stringValue: 'Booking Receipt Generator' },
+      createdAt: { stringValue: now },
+      updatedAt: { stringValue: now }
+    }
+  };
+
+  const res = await fetch(`${FIRESTORE_BASE}/tourBookings?key=${FIREBASE_CONFIG.apiKey}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) {
+    const errText = await res.text();
+    console.warn('Firestore write warning:', errText);
+    throw new Error('Firestore sync error');
+  }
+  const json = await res.json();
+  const docId = json.name ? json.name.split('/').pop() : '';
+  console.log('Synced booking to Firestore doc:', docId);
+  return docId;
+}
+
+/* ===== Settings & Config ===== */
+const store = { get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }, set(k,v){ try { localStorage.setItem(k,v); } catch(e){} } };
+
+function getCfg() {
+  const saved = store.get('sz_config');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      return Object.assign({
+        prices: { sleeper: 13999, '3ac': 15999 }, coupleExtra: 3000,
+        child5_7Pct: 50, child8_11Pct: 75,
+        dates: ['2026-10-24','2026-11-05','2026-11-15','2026-11-26','2026-12-05','2026-12-15','2026-12-26'],
+        modes: ['Cash','UPI','Bank Transfer','Cheque']
+      }, parsed);
+    } catch(e){}
+  }
+  return {
+    prices: { sleeper: 13999, '3ac': 15999 }, coupleExtra: 3000,
+    child5_7Pct: 50, child8_11Pct: 75,
+    dates: ['2026-10-24','2026-11-05','2026-11-15','2026-11-26','2026-12-05','2026-12-15','2026-12-26'],
+    modes: ['Cash','UPI','Bank Transfer','Cheque']
+  };
+}
+let CFG = getCfg();
+
+const LOGO_DATA_URI = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 50' width='240' height='50'><defs><linearGradient id='sg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%23FFA826'/><stop offset='100%25' stop-color='%23E07B00'/></linearGradient><linearGradient id='glow' x1='0%25' y1='100%25' x2='0%25' y2='0%25'><stop offset='0%25' stop-color='%23FFD15C'/><stop offset='100%25' stop-color='%23FFA826'/></linearGradient></defs><g transform='translate(6,6)'><circle cx='20' cy='20' r='19' fill='%23FFF6EA' stroke='%23F3DDA0' stroke-width='1.5'/><circle cx='20' cy='14' r='6' fill='url(%23glow)'/><path d='M8 29 L16 16 L24 29 Z' fill='url(%23sg)'/><path d='M19 29 L25 19 L32 29 Z' fill='%230E2238' opacity='0.9'/><path d='M16 16 L13 21 L16 20 L19 21 Z' fill='%23FFFFFF'/><path d='M25 19 L23 23 L25 22 L27 23 Z' fill='%23FFFFFF'/></g><g transform='translate(56,0)'><text x='0' y='27' font-family='sans-serif' font-weight='800' font-size='23' fill='url(%23sg)'>Sanzari</text><text x='86' y='27' font-family='sans-serif' font-weight='700' font-size='23' fill='%230E2238'>Tourism</text><text x='1' y='42' font-family='sans-serif' font-weight='600' font-size='9' fill='%235E6E83' letter-spacing='2.2'>ESTD 1990 · BHUJ, KUTCH</text></g></svg>";
+
+const IMG_FALLBACKS = {
+  "logo": "/img/logo.svg",
+  "banner": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 350' width='1000' height='350'><defs><linearGradient id='bg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%230B1E36'/><stop offset='50%25' stop-color='%231B3A5D'/><stop offset='100%25' stop-color='%230F2A4A'/></linearGradient><linearGradient id='sky' x1='0%25' y1='0%25' x2='0%25' y2='100%25'><stop offset='0%25' stop-color='%23FF9E43'/><stop offset='50%25' stop-color='%23FFD269'/><stop offset='100%25' stop-color='%234A80BA'/></linearGradient></defs><rect width='1000' height='350' fill='url(%23bg)'/><rect width='1000' height='200' fill='url(%23sky)' opacity='0.7'/><circle cx='800' cy='90' r='45' fill='%23FFF3D1' opacity='0.9'/><path d='M0 240 L180 100 L320 200 L500 80 L680 220 L850 70 L1000 240 L1000 350 L0 350 Z' fill='%2332567A'/><path d='M0 240 L180 100 L250 145 L320 200 Z M380 135 L500 80 L580 130 Z M760 120 L850 70 L920 125 Z' fill='%23FFFFFF' opacity='0.9'/><path d='M0 270 Q 250 250 500 280 T 1000 260 L1000 350 L0 350 Z' fill='%23132D48'/><text x='40' y='140' font-family='sans-serif' font-weight='800' font-size='38' fill='%23FFFFFF'>KASHMIR WINTER TOUR 2026</text><text x='40' y='180' font-family='sans-serif' font-weight='600' font-size='18' fill='%23FFD15C'>Srinagar · Gulmarg · Pahalgam · Sonamarg · Dal Lake Houseboat</text></svg>",
+  "srinagar": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 250' width='400' height='250'><rect width='400' height='250' fill='%232B5B84'/><path d='M0 150 L120 70 L220 130 L320 60 L400 140 L400 250 L0 250 Z' fill='%23193854'/><path d='M120 70 L150 90 L90 90 Z M320 60 L350 85 L290 85 Z' fill='%23FFFFFF'/><path d='M0 180 Q 200 160 400 180 L400 250 L0 250 Z' fill='%233575A8'/><text x='20' y='220' font-family='sans-serif' font-weight='700' font-size='18' fill='%23FFFFFF'>Srinagar City</text></svg>",
+  "dal": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 250' width='400' height='250'><defs><linearGradient id='dalsky' x1='0%25' y1='0%25' x2='0%25' y2='100%25'><stop offset='0%25' stop-color='%23F08A00'/><stop offset='100%25' stop-color='%233A7BD5'/></linearGradient></defs><rect width='400' height='250' fill='url(%23dalsky)'/><path d='M0 120 L100 50 L200 110 L300 40 L400 100 L400 250 L0 250 Z' fill='%231C3D5A' opacity='0.7'/><path d='M100 50 L130 70 L70 70 Z M300 40 L330 65 L270 65 Z' fill='%23FFFFFF'/><path d='M0 150 Q 200 135 400 150 L400 250 L0 250 Z' fill='%2328608E'/><path d='M120 190 Q 200 180 280 190 Q 200 205 120 190 Z' fill='%238F5800'/><polygon points='160,190 240,190 230,170 170,170' fill='%23E07B00'/><text x='20' y='230' font-family='sans-serif' font-weight='700' font-size='17' fill='%23FFFFFF'>Dal Lake Shikara</text></svg>",
+  "shankaracharya": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 250' width='400' height='250'><rect width='400' height='250' fill='%232E6A9E'/><path d='M50 250 L200 80 L350 250 Z' fill='%231B4368'/><polygon points='200,80 180,120 220,120' fill='%23D4AF37'/><rect x='192' y='60' width='16' height='20' fill='%23F08A00'/><text x='20' y='230' font-family='sans-serif' font-weight='700' font-size='16' fill='%23FFFFFF'>Shankaracharya Temple</text></svg>",
+  "shalimar": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 250' width='400' height='250'><rect width='400' height='250' fill='%231E5631'/><rect x='150' y='80' width='100' height='70' fill='%238F5800' rx='8'/><path d='M130 80 L200 40 L270 80 Z' fill='%23B97A00'/><circle cx='200' cy='180' r='35' fill='%232B7DE9' opacity='0.8'/><text x='20' y='230' font-family='sans-serif' font-weight='700' font-size='16' fill='%23FFFFFF'>Shalimar Garden</text></svg>",
+  "mughal": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 250' width='400' height='250'><rect width='400' height='250' fill='%23226B38'/><circle cx='100' cy='120' r='30' fill='%23E5533D'/><circle cx='300' cy='120' r='30' fill='%23F08A00'/><circle cx='200' cy='100' r='35' fill='%23E9A30E'/><text x='20' y='230' font-family='sans-serif' font-weight='700' font-size='16' fill='%23FFFFFF'>Mughal Gardens</text></svg>",
+  "nishat": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 250' width='400' height='250'><rect width='400' height='250' fill='%231B4D78'/><path d='M0 160 L400 160 L400 250 L0 250 Z' fill='%232E7BB8'/><rect x='120' y='90' width='160' height='50' fill='%23226B38' rx='6'/><text x='20' y='230' font-family='sans-serif' font-weight='700' font-size='16' fill='%23FFFFFF'>Nishat Bagh</text></svg>",
+  "hazratbal": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 250' width='400' height='250'><rect width='400' height='250' fill='%23204969'/><path d='M150 160 C150 100 250 100 250 160 Z' fill='%23FFFFFF'/><rect x='190' y='60' width='20' height='50' fill='%23FFFFFF'/><circle cx='200' cy='55' r='8' fill='%23F08A00'/><text x='20' y='230' font-family='sans-serif' font-weight='700' font-size='16' fill='%23FFFFFF'>Hazratbal Shrine</text></svg>",
+  "ganderbal": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 250' width='400' height='250'><rect width='400' height='250' fill='%231B3A5D'/><path d='M0 120 L150 40 L300 110 L400 50 L400 250 L0 250 Z' fill='%23132D48'/><path d='M0 180 Q 200 140 400 180 L400 250 L0 250 Z' fill='%232B7DE9'/><text x='20' y='230' font-family='sans-serif' font-weight='700' font-size='16' fill='%23FFFFFF'>Ganderbal &amp; Sindh River</text></svg>",
+  "sonamarg": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 250' width='400' height='250'><rect width='400' height='250' fill='%234A729A'/><path d='M0 180 L100 50 L220 160 L320 30 L400 150 L400 250 L0 250 Z' fill='%23203C58'/><path d='M100 50 L140 85 L60 85 Z M320 30 L360 70 L280 70 Z' fill='%23FFFFFF'/><text x='20' y='230' font-family='sans-serif' font-weight='700' font-size='16' fill='%23FFFFFF'>Sonamarg Glacier</text></svg>",
+  "gulmarg": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 250' width='400' height='250'><rect width='400' height='250' fill='%23386082'/><path d='M0 160 L120 40 L250 150 L350 20 L400 120 L400 250 L0 250 Z' fill='%231A354E'/><path d='M120 40 L150 70 L90 70 Z M350 20 L380 55 L320 55 Z' fill='%23FFFFFF'/><line x1='50' y1='200' x2='350' y2='60' stroke='%23F08A00' stroke-width='3'/><rect x='180' y='110' width='24' height='18' fill='%23E5533D' rx='4'/><text x='20' y='230' font-family='sans-serif' font-weight='700' font-size='16' fill='%23FFFFFF'>Gulmarg Gondola</text></svg>",
+  "apple": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 250' width='400' height='250'><rect width='400' height='250' fill='%231E5631'/><circle cx='120' cy='110' r='24' fill='%23E5533D'/><circle cx='200' cy='130' r='28' fill='%23E5533D'/><circle cx='280' cy='100' r='22' fill='%23E5533D'/><text x='20' y='230' font-family='sans-serif' font-weight='700' font-size='16' fill='%23FFFFFF'>Apple Valley</text></svg>",
+  "saffron": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 250' width='400' height='250'><rect width='400' height='250' fill='%234A2E6B'/><circle cx='100' cy='140' r='18' fill='%238B5CF6'/><circle cx='180' cy='120' r='22' fill='%238B5CF6'/><circle cx='260' cy='150' r='20' fill='%238B5CF6'/><circle cx='340' cy='130' r='18' fill='%238B5CF6'/><text x='20' y='230' font-family='sans-serif' font-weight='700' font-size='16' fill='%23FFFFFF'>Saffron Valley</text></svg>",
+  "batfactory": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 250' width='400' height='250'><rect width='400' height='250' fill='%238F5800'/><rect x='100' y='50' width='25' height='140' fill='%23F3DDA0' rx='4'/><rect x='180' y='50' width='25' height='140' fill='%23F3DDA0' rx='4'/><rect x='260' y='50' width='25' height='140' fill='%23F3DDA0' rx='4'/><text x='20' y='230' font-family='sans-serif' font-weight='700' font-size='16' fill='%23FFFFFF'>Bat Factory</text></svg>",
+  "pahalgam": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 250' width='400' height='250'><rect width='400' height='250' fill='%23194129'/><path d='M0 100 L120 30 L240 90 L360 20 L400 80 L400 250 L0 250 Z' fill='%23112E1D'/><path d='M120 30 L150 55 L90 55 Z M360 20 L385 45 L335 45 Z' fill='%23FFFFFF'/><path d='M0 170 Q 200 130 400 170 L400 250 L0 250 Z' fill='%232B7DE9'/><text x='20' y='230' font-family='sans-serif' font-weight='700' font-size='16' fill='%23FFFFFF'>Pahalgam Valley</text></svg>",
+  "aishmuqam": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 250' width='400' height='250'><rect width='400' height='250' fill='%231E3D59'/><path d='M80 250 L200 70 L320 250 Z' fill='%2313273A'/><rect x='180' y='110' width='40' height='60' fill='%23FFFFFF' rx='4'/><text x='20' y='230' font-family='sans-serif' font-weight='700' font-size='16' fill='%23FFFFFF'>Aishmuqam Shrine</text></svg>"
+};
+const IMG = IMG_FALLBACKS;
 const CREDITS = "Srinagar: KennyOMG (CC BY-SA 3.0); Dal: Fulvio Spada (CC BY-SA 2.0); Shankaracharya: Divya Gupta (CC BY-SA 3.0); Shalimar: Pradeepkjoshi (CC BY-SA 4.0); Mughal: Harvinder Chandigarh (CC BY 4.0); Nishat: McKay Savage (CC BY 2.0); Hazratbal: Zuck28 (CC BY 4.0); Ganderbal: Rajarshi Mitra (CC BY 2.0); Sonamarg: Ganesh Mohan T / UnpetitproleX (CC BY 4.0); Gulmarg: Zahoor Bhat (CC BY-SA 4.0); Apple: Auli Raha (CC BY-SA 4.0); Saffron: Umarsami (CC BY-SA 4.0); Batfactory: Arv94 (CC BY-SA 4.0); Pahalgam: KennyOMG (CC BY-SA 3.0); Aishmuqam: Sauood07 (CC BY 4.0)";
 const SIGHTS = [['srinagar','શ્રીનગર સિટી','Srinagar City'],['dal','દાલ લેક','Dal Lake'],['shankaracharya','શંકરાચાર્ય મંદિર','Shankaracharya Temple'],['shalimar','શાલીમાર ગાર્ડન','Shalimar Garden'],['mughal','મુગલ ગાર્ડન','Mughal Garden'],['nishat','નિશાત બાગ','Nishat Bagh'],['hazratbal','હઝરતબલ','Hazratbal'],['ganderbal','ગંદરબલ સિંધ નદી','Ganderbal & Sindh River'],['sonamarg','સોનમર્ગ ગ્લેશિયર','Sonamarg Glacier'],['gulmarg','ગુલમર્ગ','Gulmarg Hill Station'],['apple','એપલ વેલી','Apple Valley'],['saffron','કેસર વેલી','Saffron Valley'],['batfactory','બેટ ફેક્ટરી','Bat Factory'],['pahalgam','પહેલગામ','Pahalgam'],['aishmuqam','એશમુકામ','Aishmuqam']];
 
@@ -290,41 +576,104 @@ const WD = ['રવિવાર','સોમવાર','મંગળવાર','�
 const pd = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
 const fd = s => { if (!s) return ''; const d = pd(s); return `${String(d.getDate()).padStart(2,'0')} ${MON[d.getMonth()]} ${d.getFullYear()}`; };
 const iso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-const store = { get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }, set(k,v){ try { localStorage.setItem(k,v); } catch(e){} } };
 function toast(t){ const el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('on'), 2600); }
 
+/* ===== member tier helper ===== */
+function getMemberTier(ageStr, defaultType) {
+  if (ageStr === '' || ageStr === undefined || ageStr === null) {
+    if (defaultType === 'kid') {
+      return { tag: `🧒 Child (${CFG.child5_7Pct||50}%)`, code: 'kid5_7', pct: CFG.child5_7Pct || 50, cls: 'kid' };
+    }
+    return { tag: '👤 Adult', code: 'adult', pct: 100, cls: 'adult' };
+  }
+  const age = parseInt(ageStr, 10);
+  if (isNaN(age)) {
+    return { tag: '👤 Adult', code: 'adult', pct: 100, cls: 'adult' };
+  }
+  if (age < 5) {
+    return { tag: '👶 Infant (0%)', code: 'infant', pct: 0, cls: 'infant' };
+  } else if (age >= 5 && age <= 7) {
+    return { tag: `🧒 Child 5-7 (${CFG.child5_7Pct||50}%)`, code: 'kid5_7', pct: CFG.child5_7Pct || 50, cls: 'kid' };
+  } else if (age >= 8 && age <= 11) {
+    return { tag: `👦 Child 8-11 (${CFG.child8_11Pct||75}%)`, code: 'kid8_11', pct: CFG.child8_11Pct || 75, cls: 'kid-mid' };
+  } else {
+    return { tag: '👤 Adult (100%)', code: 'adult', pct: 100, cls: 'adult' };
+  }
+}
+
 /* ===== state ===== */
-const S = { adults: 1, kids: 0, couples: 0, pkg: 'sleeper', date: '', mode: 'UPI', manualTotal: false };
+const S = { adults: 1, kids: 0, couples: 0, tourType: 'group', pkg: 'sleeper', date: '', mode: 'UPI', manualTotal: false };
 let pdfFile = null;
 let members = []; // [{name, age, type:'adult'|'kid'}]
 
 function nextNo(){ const M=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'],n=new Date(); return `SZ-${M[n.getMonth()]}${String(n.getFullYear()).slice(2)}-${String(n.getDate()).padStart(2,'0')}${String(n.getMonth()+1).padStart(2,'0')}`; }
 function resetForm(){
+  CFG = getCfg();
   ['name','mobile','city','advance','notes','total'].forEach(k => $(k).value = '');
-  Object.assign(S, { adults: 1, kids: 0, couples: 0, pkg: 'sleeper', date: '', mode: 'UPI', manualTotal: false });
+  Object.assign(S, { adults: 1, kids: 0, couples: 0, tourType: 'group', pkg: 'sleeper', date: '', mode: 'UPI', manualTotal: false });
   $('bno').value = nextNo(); $('bdate').value = iso(new Date()); $('dueby').value = '';
   $('emp').value = store.get('sz_emp') || '';
   document.querySelectorAll('.in.bad').forEach(e => e.classList.remove('bad'));
   $('err').style.display = 'none';
-  members = []; syncMembersUI();
+  members = [];
+  initControls();
+  syncMembersUI();
   invalidate(); syncUI();
+  if (typeof goToStep === 'function') goToStep(1, false);
 }
 
 /* ===== build controls ===== */
-const today = iso(new Date());
-$('dates').innerHTML = CFG.dates.map(d => { const x = pd(d); return `<button type="button" class="chip" data-v="${d}" ${d < today ? 'disabled' : ''} aria-pressed="false">${String(x.getDate()).padStart(2,'0')} ${MON[x.getMonth()]}<small>${WD[x.getDay()]}</small></button>`; }).join('');
-$('mode').innerHTML = CFG.modes.map(m => `<button type="button" class="chip" data-v="${m}" aria-pressed="false">${m}</button>`).join('');
-$('dates').onclick = e => { const b = e.target.closest('.chip'); if (!b || b.disabled) return; S.date = b.dataset.v; changed(); };
-$('mode').onclick = e => { const b = e.target.closest('.chip'); if (!b) return; S.mode = b.dataset.v; changed(); };
-$('pkg').onclick = e => { const b = e.target.closest('.chip'); if (!b) return; S.pkg = b.dataset.v; changed(); };
-document.querySelectorAll('.step').forEach(st => st.onclick = e => {
-  const b = e.target.closest('button'); if (!b) return; const k = st.dataset.k;
-  const min = k === 'adults' ? 1 : 0; S[k] = Math.max(min, Math.min(40, S[k] + Number(b.dataset.d)));
-  if (k === 'couples') S.couples = Math.min(S.couples, Math.floor((S.adults) / 2));
-  if (k === 'adults') S.couples = Math.min(S.couples, Math.floor(S.adults / 2));
-  if (k === 'adults' || k === 'kids') syncMembersUI();
-  changed();
-});
+function initControls() {
+  const today = iso(new Date());
+  $('dates').innerHTML = CFG.dates.map(d => {
+    const x = pd(d);
+    return `<button type="button" class="chip" data-v="${d}" ${d < today ? 'disabled' : ''} aria-pressed="false">${String(x.getDate()).padStart(2,'0')} ${MON[x.getMonth()]}<small>${WD[x.getDay()]}</small></button>`;
+  }).join('');
+  $('mode').innerHTML = CFG.modes.map(m => `<button type="button" class="chip" data-v="${m}" aria-pressed="false">${m}</button>`).join('');
+
+  $('dates').onclick = e => {
+    const b = e.target.closest('.chip'); if (!b || b.disabled) return;
+    S.date = b.dataset.v; changed();
+  };
+
+  $('tourType').onclick = e => {
+    const b = e.target.closest('.chip'); if (!b) return;
+    S.tourType = b.dataset.v;
+    document.querySelectorAll('#tourType .chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.v === S.tourType));
+    if (S.tourType === 'group') {
+      $('groupDatesBox').style.display = 'block';
+      $('pvtDateBox').style.display = 'none';
+      const sel = document.querySelector('#dates .chip[aria-pressed="true"]');
+      S.date = sel ? sel.dataset.v : (CFG.dates[0] || '');
+    } else {
+      $('groupDatesBox').style.display = 'none';
+      $('pvtDateBox').style.display = 'block';
+      if (!$('pvtDate').value) $('pvtDate').value = today;
+      S.date = $('pvtDate').value;
+    }
+    changed();
+  };
+
+  $('pvtDate').onchange = () => {
+    if (S.tourType === 'private') {
+      S.date = $('pvtDate').value;
+      changed();
+    }
+  };
+
+  $('mode').onclick = e => { const b = e.target.closest('.chip'); if (!b) return; S.mode = b.dataset.v; changed(); };
+  $('pkg').onclick = e => { const b = e.target.closest('.chip'); if (!b) return; S.pkg = b.dataset.v; changed(); };
+
+  document.querySelectorAll('.step').forEach(st => st.onclick = e => {
+    const b = e.target.closest('button'); if (!b) return; const k = st.dataset.k;
+    const min = k === 'adults' ? 1 : 0; S[k] = Math.max(min, Math.min(40, S[k] + Number(b.dataset.d)));
+    if (k === 'couples') S.couples = Math.min(S.couples, Math.floor((S.adults) / 2));
+    if (k === 'adults') S.couples = Math.min(S.couples, Math.floor(S.adults / 2));
+    if (k === 'adults' || k === 'kids') syncMembersUI();
+    changed();
+  });
+}
+
 function syncMembersUI(){
   const need = S.adults + S.kids;
   while(members.length < need){ members.push({name:'', age:'', type: members.length < S.adults ? 'adult' : 'kid'}); }
@@ -332,49 +681,83 @@ function syncMembersUI(){
   members.forEach((m,i) => { m.type = i < S.adults ? 'adult' : 'kid'; });
   renderMembers();
 }
+
 function renderMembers(){
   const list = $('mlist');
   list.innerHTML = '';
   members.forEach((m,i) => {
+    const tier = getMemberTier(m.age, m.type);
     const row = document.createElement('div');
     row.className = 'mrow';
-    row.innerHTML = `<input class="in" style="height:38px;font-size:13.5px" placeholder="નામ · Name" value="${esc(m.name)}" data-i="${i}" data-f="name"><input class="in" style="height:38px;text-align:center" placeholder="ઉંમર" inputmode="numeric" maxlength="3" value="${m.age||''}" data-i="${i}" data-f="age"><span class="mtag ${m.type}">${m.type==='adult'?'👤 Adult':'🧒 Kid'}</span><button type="button" class="mrem" data-i="${i}">×</button>`;
+    row.innerHTML = `<input class="in" style="height:38px;font-size:13.5px" placeholder="નામ · Name" value="${esc(m.name)}" data-i="${i}" data-f="name"><input class="in" style="height:38px;text-align:center" placeholder="ઉંમર" inputmode="numeric" maxlength="3" value="${m.age||''}" data-i="${i}" data-f="age"><span class="mtag ${tier.cls}">${tier.tag}</span><button type="button" class="mrem" data-i="${i}">×</button>`;
     list.appendChild(row);
   });
-  list.querySelectorAll('[data-f]').forEach(inp => inp.oninput = e => { members[+e.target.dataset.i][e.target.dataset.f]=e.target.value; invalidate(); });
+  list.querySelectorAll('[data-f]').forEach(inp => inp.oninput = e => {
+    const idx = +e.target.dataset.i;
+    const field = e.target.dataset.f;
+    members[idx][field] = e.target.value;
+    if (field === 'age') {
+      const tier = getMemberTier(members[idx].age, members[idx].type);
+      const tagEl = e.target.closest('.mrow').querySelector('.mtag');
+      if (tagEl) {
+        tagEl.className = 'mtag ' + tier.cls;
+        tagEl.textContent = tier.tag;
+      }
+    }
+    changed();
+  });
   list.querySelectorAll('.mrem').forEach(btn => btn.onclick = e => {
     const j=+e.currentTarget.dataset.i, t=members[j].type;
     members.splice(j,1);
     if(t==='adult') S.adults=Math.max(1,S.adults-1); else S.kids=Math.max(0,S.kids-1);
     document.querySelectorAll('.step').forEach(st=>st.querySelector('output').textContent=S[st.dataset.k]);
-    renderMembers(); changed(); invalidate();
+    renderMembers(); changed();
   });
 }
+
 $('maddBtn').onclick = () => {
   const type = members.filter(m=>m.type==='adult').length < S.adults ? 'adult' : 'kid';
   if(type==='kid') S.kids++; else S.adults++;
   members.push({name:'',age:'',type});
   document.querySelectorAll('.step').forEach(st=>st.querySelector('output').textContent=S[st.dataset.k]);
-  renderMembers(); changed(); invalidate();
+  renderMembers(); changed();
   const rows=$('mlist').querySelectorAll('.mrow'); if(rows.length) rows[rows.length-1].querySelector('[data-f="name"]').focus();
 };
+
 $('total').oninput = () => { S.manualTotal = true; changed(false); };
 $('autoBtn').onclick = e => { e.preventDefault(); S.manualTotal = false; changed(); };
 ['bno','bdate','name','mobile','city','advance','dueby','emp','notes'].forEach(k => $(k).addEventListener('input', () => { $(k).classList.remove('bad'); changed(false); }));
 $('mobile').addEventListener('input', () => { $('mobile').value = $('mobile').value.replace(/\D/g,'').slice(0,10); });
 ['advance','total'].forEach(k => $(k).addEventListener('blur', () => { const v = num($(k).value); $(k).value = v ? inr(v) : ''; }));
 
-function calcTotal(){ return (S.adults + S.kids) * CFG.prices[S.pkg] + S.couples * CFG.coupleExtra; }
+function calcTotal(){
+  const basePrice = (CFG.prices && CFG.prices[S.pkg]) ? CFG.prices[S.pkg] : 13999;
+  let sum = 0;
+  if (members && members.length > 0) {
+    members.forEach(m => {
+      const tier = getMemberTier(m.age, m.type);
+      sum += Math.round(basePrice * (tier.pct / 100));
+    });
+  } else {
+    sum = (S.adults + S.kids) * basePrice;
+  }
+  return sum + (S.couples * (CFG.coupleExtra || 3000));
+}
+
 function data(){
   const total = S.manualTotal ? num($('total').value) : calcTotal();
   const advance = num($('advance').value);
   return {
     bno: $('bno').value.trim(), bdate: $('bdate').value, name: $('name').value.trim(), mobile: $('mobile').value.trim(), city: $('city').value.trim(),
-    adults: S.adults, kids: S.kids, couples: S.couples, members: S.adults + S.kids, pkg: S.pkg, date: S.date, mode: S.mode,
+    adults: S.adults, kids: S.kids, couples: S.couples, members: S.adults + S.kids, tourType: S.tourType, pkg: S.pkg, date: S.date, mode: S.mode,
     total, advance, due: Math.max(0, total - advance), dueby: $('dueby').value, emp: $('emp').value.trim(), notes: $('notes').value.trim(),
-    membersList: members.map(m => ({name: m.name.trim(), age: m.age, type: m.type}))
+    membersList: members.map(m => {
+      const tier = getMemberTier(m.age, m.type);
+      return { name: m.name.trim(), age: m.age, type: m.type, tag: tier.tag, cls: tier.cls, pct: tier.pct };
+    })
   };
 }
+
 function syncUI(){
   document.querySelectorAll('.step').forEach(st => st.querySelector('output').textContent = S[st.dataset.k]);
   document.querySelectorAll('#dates .chip').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === S.date));
@@ -390,12 +773,13 @@ function syncUI(){
   const pvSec = $('pvSec'); if(pvSec) pvSec.style.display = complete ? 'block' : 'none';
   if(complete){ render($('scaler'), d); fit(); }
 }
+
 function invalidate(){ pdfFile = null; $('waBtn').hidden = true; $('makeBtn').hidden = false; }
 function changed(){ invalidate(); syncUI(); }
 
 /* ===== receipt template ===== */
 const V = (v, ph = '—') => v ? `<div class="v">${esc(v)}</div>` : `<div class="v e">${ph}</div>`;
-function header(){ return `<div class="top"><img src="${IMG.logo}"><div class="pill">KASHMIR WINTER TOUR 2026</div></div>`; }
+function header(){ return `<div class="top"><img src="/img/logo.svg" onerror="this.onerror=null;this.src='${LOGO_DATA_URI}'" style="height:50px"><div class="pill">KASHMIR WINTER TOUR 2026</div></div>`; }
 function footer(d, p){
   return `<div class="foot"><div class="contact">
     <div class="cb" style="background:linear-gradient(135deg,#2B7DE9,#1B4F9C)"><small>OFFICE · CALL / WHATSAPP</small><b>63551 35992</b></div>
@@ -409,6 +793,7 @@ function page1(d){
   const pk = d.pkg === 'sleeper' ? 'Sleeper Train' : '3AC Train';
   const room = d.couples ? `4 Bed Deluxe + ${d.couples} Private Couple Room` : '4 Bed Deluxe Room';
   const paid = d.due === 0 && d.total > 0;
+  const tourLabel = d.tourType === 'private' ? '🚘 Private Tour (પ્રાઇવેટ ટુર)' : '👥 Group Tour (ગૃપ ટુર)';
   const pol = [
     ['#FFF4D6','#B97A00','48','કલાક પહેલાં','મુસાફરીની તારીખથી 48 કલાક પહેલાં Cancel','48 hrs before travel date · 25% cancellation of advance amount', 25],
     ['#FFEBD1','#E07B00','24','કલાક પહેલાં','મુસાફરીની તારીખથી 24 કલાક પહેલાં Cancel','24 hrs before travel date · 50% cancellation of advance amount', 50],
@@ -426,10 +811,11 @@ function page1(d){
       <div class="r2"><div><div class="l"><b>મોબાઇલ</b> · Mobile</div>${V(d.mobile ? '+91 ' + d.mobile.replace(/(\d{5})(\d+)/,'$1 $2') : '')}</div><div><div class="l"><b>શહેર / ગામ</b> · City</div>${V(d.city)}</div></div>
       <div class="l"><b>સભ્યો</b> · Members</div>
       <div class="r3"><div class="v">${d.members}<span class="tag">કુલ</span></div><div class="v">${d.adults}<span class="tag">મોટા</span></div><div class="v">${d.kids}<span class="tag">બાળક</span></div></div>
-      ${d.membersList && d.membersList.filter(m=>m.name).length ? `<div class="l" style="margin-top:8px;font-size:11px;font-weight:600;color:var(--muted)">સભ્ય-સૂચી · MEMBER LIST</div><table style="width:100%;border-collapse:collapse;margin-top:4px">${d.membersList.map((m,i)=>`<tr style="border-bottom:1px solid #ECF0F6"><td style="padding:3px 4px;font-size:11px;color:var(--muted);width:18px">${i+1}</td><td style="padding:3px 6px;font-size:12.5px;font-weight:600">${esc(m.name)||'—'}</td><td style="padding:3px 4px;font-size:11.5px;color:var(--muted);width:36px">${m.age?m.age+' yr':''}</td><td style="padding:3px 4px;text-align:right"><span style="font-size:10px;padding:2px 6px;border-radius:99px;font-weight:600;background:${m.type==='adult'?'#E1EEFD':'#FFF0E0'};color:${m.type==='adult'?'#2B7DE9':'#F08A00'}">${m.type==='adult'?'Adult':'Kid'}</span></td></tr>`).join('')}</table>` : ''}
+      ${d.membersList && d.membersList.filter(m=>m.name).length ? `<div class="l" style="margin-top:8px;font-size:11px;font-weight:600;color:var(--muted)">સભ્ય-સૂચી · MEMBER LIST</div><table style="width:100%;border-collapse:collapse;margin-top:4px">${d.membersList.map((m,i)=>`<tr style="border-bottom:1px solid #ECF0F6"><td style="padding:3px 4px;font-size:11px;color:var(--muted);width:18px">${i+1}</td><td style="padding:3px 6px;font-size:12.5px;font-weight:600">${esc(m.name)||'—'}</td><td style="padding:3px 4px;font-size:11.5px;color:var(--muted);width:36px">${m.age?m.age+' yr':''}</td><td style="padding:3px 4px;text-align:right"><span style="font-size:10px;padding:2px 6px;border-radius:99px;font-weight:600;background:${m.cls==='adult'?'#E1EEFD':m.cls==='kid-mid'?'#E6F4EA':m.cls==='infant'?'#F3E8FF':'#FFF0E0'};color:${m.cls==='adult'?'#2B7DE9':m.cls==='kid-mid'?'#1DAA6B':m.cls==='infant'?'#8B5CF6':'#F08A00'}">${m.tag}</span></td></tr>`).join('')}</table>` : ''}
       </div>
     <div class="card"><div class="ch"><div class="ic" style="background:var(--blue)">🗓</div>યાત્રાની વિગત <small>Trip</small></div>
-      <div class="l" style="margin-top:0"><b>Departure તારીખ</b> · ભુજથી</div>${V(dd)}
+      <div class="l" style="margin-top:0"><b>ટુર ટાઈપ</b> · Tour Type</div>${V(tourLabel)}
+      <div class="l"><b>Departure તારીખ</b> · ભુજથી</div>${V(dd)}
       <div class="l"><b>Package</b></div>${V(`${pk} · ₹${inr(CFG.prices[d.pkg])} / વ્યક્તિ`)}
       <div class="l"><b>Room</b></div>${V(room)}</div>
   </div>
@@ -453,11 +839,11 @@ function page1(d){
 function page2(d){
   const stays = [['srinagar','શ્રીનગર','2 Night','#FFEBD1','#F08A00'],['dal','Houseboat','1 Night','#E1EEFD','#2B7DE9'],['pahalgam','પહેલગામ','1 Night','#DDF4E8','#1DAA6B'],[null,'જમ્મુ','1 Night','#FFF4D6','#B97A00']];
   return `<div class="a4 p2"><div class="bg"></div><div class="pg">${header()}
-  <div class="ban" style="margin-top:12px;background-image:url(${IMG.banner})"><div class="sh"></div>
+  <div class="ban" style="margin-top:6px;background-image:url(${IMG.banner})"><div class="sh"></div>
     <div class="in2"><div class="k">TOUR DETAILS · પ્રવાસની વિગત</div><h3>Kashmir Winter Tour 2026</h3><p>9 દિવસ · ભુજથી ભુજ · 15 જગ્યા Sightseeing</p></div>
     <div class="pills"><span>👤 ${esc(d.name) || 'Guest'}</span><span>🗓 ${d.date ? fd(d.date) : 'Departure —'}</span><span>👥 ${d.members} સભ્યો</span></div></div>
 
-  <div class="card" style="margin-top:11px"><div class="ch"><div class="ic" style="background:var(--blue)">➜</div>Route <small>મુસાફરી</small></div>
+  <div class="card" style="margin-top:6px"><div class="ch"><div class="ic" style="background:var(--blue)">➜</div>Route <small>મુસાફરી</small></div>
     <div class="route">
       <div class="stop"><div class="dot" style="background:var(--saffron)">ભુ</div><b>ભુજ</b><small>Start</small></div>
       <div class="leg"><span>AC Sleeper Bus +<br>Sleeper Train</span></div>
@@ -468,24 +854,31 @@ function page2(d){
       <div class="stop"><div class="dot" style="background:var(--green)">ભુ</div><b>ભુજ</b><small>પરત</small></div>
     </div></div>
 
-  <div class="card" style="margin-top:11px"><div class="ch"><div class="ic" style="background:var(--saffron)">🏨</div>5 રાત 2 Star Hotel <small>Stay</small></div>
-    <div class="stays">${stays.map(([k,n,t,bg,c]) => `<div class="st">${k ? `<div class="im" style="background-image:url(${IMG[k]})"></div>` : '<div class="im j">🏙️</div>'}<div class="tt">${n}<i style="background:${bg};color:${c}">${t}</i></div></div>`).join('')}</div>
-    <div class="note"><b>✓</b> દરેક હોટલમાં 4 Bed Deluxe Room &nbsp;<b>✓</b> Breakfast અને Dinner સામેલ &nbsp;<b>✓</b> 35 વર્ષના અનુભવ સાથે Tour Management</div></div>
+  <div class="card" style="margin-top:6px"><div class="ch"><div class="ic" style="background:var(--saffron)">🏨</div>5 રાત 2 Star Hotel <small>Stay</small></div>
+    <div class="stays">${stays.map(([k,n,t,bg,c]) => `<div class="st">${k ? `<div class="im" style="background-image:url('${IMG[k]}');background-size:cover;background-position:center"></div>` : '<div class="im j">🏙️</div>'}<div class="tt">${n}<i style="background:${bg};color:${c}">${t}</i></div></div>`).join('')}</div>
+    <div class="note" style="margin-top:4px"><b>✓</b> દરેક હોટલમાં 4 Bed Deluxe Room &nbsp;<b>✓</b> Breakfast અને Dinner સામેલ &nbsp;<b>✓</b> 35 વર્ષના અનુભવ સાથે Tour Management</div></div>
 
-  <div class="card" style="margin-top:11px"><div class="ch"><div class="ic" style="background:var(--green)">📍</div>Sightseeing <small>15 જગ્યા</small></div>
-    <div class="sg">${SIGHTS.map(([k,g,e],i) => `<div class="s"><div class="im" style="background-image:url(${IMG[k]})"><i>${String(i+1).padStart(2,'0')}</i></div><div class="nm">${g}<small>${e}</small></div></div>`).join('')}</div></div>
+  <div class="card" style="margin-top:6px"><div class="ch"><div class="ic" style="background:var(--green)">📍</div>Sightseeing <small>15 જગ્યા</small></div>
+    <div class="sg">${SIGHTS.map(([k,g,e],i) => `<div class="s"><div class="im" style="background-image:url('${IMG[k]}');background-size:cover;background-position:center"><i>${String(i+1).padStart(2,'0')}</i></div><div class="nm">${g}<small>${e}</small></div></div>`).join('')}</div></div>
 
-  <div class="two" style="margin-top:11px">
+  <div class="two" style="margin-top:6px">
     <div class="card"><div class="ch"><div class="ic" style="background:var(--gold)">₹</div>Package Price <small>પ્રતિ વ્યક્તિ</small></div>
-      <div class="pl ${d.pkg === 'sleeper' ? 'sel' : ''}"><span>Sleeper Train સાથે${d.pkg === 'sleeper' ? '<em>આપનું</em>' : ''}</span><b>₹13,999</b></div>
-      <div class="pl ${d.pkg === '3ac' ? 'sel' : ''}"><span>3AC Train સાથે${d.pkg === '3ac' ? '<em>આપનું</em>' : ''}</span><b>₹15,999</b></div>
-      <div class="pl ${d.couples ? 'sel' : ''}"><span>Private Couple Room</span><b>+₹3,000 <small style="font-size:10px;color:var(--muted)">/ couple</small></b></div></div>
+      <div class="pl ${d.pkg === 'sleeper' ? 'sel' : ''}"><span>Sleeper Train સાથે${d.pkg === 'sleeper' ? '<em>આપનું</em>' : ''}</span><b>₹${inr(CFG.prices.sleeper)}</b></div>
+      <div class="pl ${d.pkg === '3ac' ? 'sel' : ''}"><span>3AC Train સાથે${d.pkg === '3ac' ? '<em>આપનું</em>' : ''}</span><b>₹${inr(CFG.prices['3ac'])}</b></div>
+      <div class="pl ${d.couples ? 'sel' : ''}"><span>Private Couple Room</span><b>+₹${inr(CFG.coupleExtra)} <small style="font-size:10px;color:var(--muted)">/ couple</small></b></div>
+      <div style="font-size:9.5px;color:var(--muted);margin-top:4px;line-height:1.2;display:grid;grid-template-columns:1fr 1fr;gap:2px 6px">
+        <div>• <b>👶 0-4 Yrs:</b> Free / Infant</div>
+        <div>• <b>🧒 5-7 Yrs:</b> ${CFG.child5_7Pct}% Ticket</div>
+        <div>• <b>👦 8-11 Yrs:</b> ${CFG.child8_11Pct}% Ticket</div>
+        <div>• <b>👤 12+ Yrs:</b> 100% Full Ticket</div>
+      </div>
+    </div>
     <div class="card"><div class="ch"><div class="ic" style="background:var(--coral)">✕</div>Package માં નથી <small>Not Included</small></div>
       <div class="xl">${['શિકારા રાઇડ','ગોંડોલા રાઇડ','ઘોડેસવારી','Union Cab','ગાર્ડન Entry','Shopping','અંગત ખર્ચ'].map(x => `<span>${x}</span>`).join('')}</div>
-      <div class="note" style="margin-top:9px">🪪 યાત્રા દરમિયાન Aadhaar / ID Card સાથે રાખવું.</div></div>
+      <div class="note" style="margin-top:6px">🪪 યાત્રા દરમિયાન Aadhaar / ID Card સાથે રાખવું.</div></div>
   </div>
   </div><div class="foot"><div class="addr" style="margin-top:0"><span><b>Sanzari Tourism</b> · Office 210, Laxmi Chambers, New Station Road, Bhuj, Kutch · <b>📞 63551 35992 · 78746 35992</b></span><span class="pno">PAGE 2/2 &nbsp;·&nbsp; <span class="since">SINCE 1990</span></span></div>
-  <div class="cred">Booking No. ${esc(d.bno)} · ${esc(d.name)} &nbsp;|&nbsp; Photos: Wikimedia Commons — ${esc(CREDITS)}</div></div></div>`;
+  <div class="cred">Booking No. ${esc(d.bno)} · ${esc(d.name)} &nbsp;|&nbsp; Kashmir Winter Tour 2026</div></div></div>`;
 }
 function render(el, d){ el.innerHTML = page1(d) + page2(d); }
 
@@ -533,14 +926,24 @@ async function makePDF(){
     // save counter + employee name
     if (d.emp) store.set('sz_emp', d.emp);
     btn.hidden = true; $('waBtn').hidden = false;
-    toast('✅ PDF તૈયાર છે – Save કરી રહ્યા છીએ…');
-    // Save to Google Sheets + Drive async (non-blocking)
+    toast('✅ PDF તૈયાર છે – Firebase & sanzariaccount માં Save થઈ રહ્યું છે…');
+
+    // 1. Sync to Firebase Firestore for sanzariaccount.vercel.app
+    let cloudSynced = false;
+    try {
+      await syncBookingToFirestore(d);
+      cloudSynced = true;
+    } catch(fsErr) {
+      console.warn('Firestore sync failed:', fsErr);
+    }
+
+    // 2. Save to Google Sheets + Drive async (non-blocking)
     if (SCRIPT_URL && SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL_HERE') {
       const reader = new FileReader();
       reader.onload = async () => {
         try {
           const b64 = reader.result.split(',')[1];
-          const res = await fetch(SCRIPT_URL, {
+          await fetch(SCRIPT_URL, {
             method: 'POST', mode: 'no-cors',
             body: JSON.stringify({
               bno: d.bno, bdate: d.bdate, name: d.name, mobile: d.mobile, city: d.city,
@@ -551,31 +954,169 @@ async function makePDF(){
               fname: pdfFile.name, pdfBase64: b64
             })
           });
-          toast('✅ PDF તૈયાર – Drive & Sheet માં Save થઈ ✓');
-        } catch(err) { toast('✅ PDF તૈયાર છે – હવે WhatsApp પર મોકલો'); }
+          toast(cloudSynced ? '✅ PDF તૈયાર – Firestore & Drive માં Save થઈ ✓' : '✅ PDF તૈયાર – Drive & Sheet માં Save થઈ ✓');
+        } catch(err) {
+          toast(cloudSynced ? '✅ PDF તૈયાર – Firestore & sanzariaccount માં Sync થઈ ✓' : '✅ PDF તૈયાર છે – હવે WhatsApp પર મોકલો');
+        }
       };
       reader.readAsDataURL(pdfFile);
     } else {
-      toast('✅ PDF તૈયાર છે – હવે WhatsApp પર મોકલો');
+      toast(cloudSynced ? '✅ PDF તૈયાર – Firestore & sanzariaccount માં Sync થઈ ✓' : '✅ PDF તૈયાર છે – હવે WhatsApp પર મોકલો');
     }
   } catch (e) { console.error(e); toast('PDF બનાવવામાં ભૂલ થઈ, ફરી પ્રયત્ન કરો'); }
   finally { btn.disabled = false; btn.lastChild.textContent = 'PDF બનાવો'; }
 }
-function message(d){
-  return `નમસ્તે ${d.name} 🙏\nSanzari Tourism માં આપનું *Kashmir Winter Tour 2026* બુકિંગ કન્ફર્મ છે ✅\n\nBooking No: ${d.bno}\nDeparture: ${fd(d.date)} (ભુજથી)\nસભ્યો: ${d.members}\nકુલ રકમ: ₹${inr(d.total)}\nAdvance જમા: ₹${inr(d.advance)}\nબાકી રકમ: ${d.due ? '₹' + inr(d.due) : 'Fully Paid ✓'}\n\nReceipt PDF સાથે મોકલેલ છે.\n— Sanzari Tourism, Bhuj\n📞 63551 35992 | 78746 35992`;
+function messageEn(d){
+  const dueStr = d.due ? `₹${inr(d.due)}` : 'Fully Paid ✓';
+  const pkgStr = d.pkg === '3ac' ? '3AC Train' : 'Sleeper Train';
+  return `Hello ${d.name} 🙏\nYour Kashmir Winter Tour 2026 booking with Sanzari Tourism is CONFIRMED ✅\n\nBooking No: ${d.bno}\nDeparture Date: ${fd(d.date)} (From Bhuj)\nTour Type: ${d.tourType === 'private' ? 'Private Tour' : 'Group Tour'}\nPackage: ${pkgStr}\nTotal Members: ${d.members} Pax\nTotal Amount: ₹${inr(d.total)}\nAdvance Paid: ₹${inr(d.advance)}\nBalance Due: ${dueStr}\n\nReceipt PDF attached/downloaded.\nThank you for choosing Sanzari Tourism! 🏔️\n— Sanzari Tourism, Bhuj\n📞 63551 35992 | 78746 35992`;
 }
+
+function messageGu(d){
+  const dueStr = d.due ? `₹${inr(d.due)}` : 'Fully Paid ✓';
+  const pkgStr = d.pkg === '3ac' ? '3AC ટ્રેન' : 'સ્લીપર ટ્રેન';
+  return `નમસ્તે ${d.name} 🙏\nSanzari Tourism માં આપનું *Kashmir Winter Tour 2026* બુકિંગ કન્ફર્મ છે ✅\n\nBooking No: ${d.bno}\nDeparture: ${fd(d.date)} (ભુજથી)\nટુર ટાઈપ: ${d.tourType === 'private' ? 'પ્રાઇવેટ ટુર' : 'ગૃપ ટુર'}\nપેકેજ: ${pkgStr}\nસભ્યો: ${d.members}\nકુલ રકમ: ₹${inr(d.total)}\nAdvance જમા: ₹${inr(d.advance)}\nબાકી રકમ: ${dueStr}\n\nReceipt PDF ડાઉનલોડ થઈ ગયેલ છે.\n— Sanzari Tourism, Bhuj\n📞 63551 35992 | 78746 35992`;
+}
+
 function download(file){ const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500); }
-async function send(){
-  if (!pdfFile) return; const d = data(); const text = message(d);
-  if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
-    try { await navigator.share({ files: [pdfFile], text }); return; }
-    catch (e) { if (e.name === 'AbortError') return; }
-  }
-  // Desktop fallback: download PDF + open WhatsApp chat with the customer
-  download(pdfFile);
-  toast('PDF Download થઈ – WhatsApp chat માં attach કરો');
-  setTimeout(() => window.open(`https://wa.me/91${d.mobile}?text=${encodeURIComponent(text)}`, '_blank'), 600);
+
+function openWaLangModal() {
+  const m = $('waLangModal');
+  if (m) m.style.display = 'flex';
 }
+
+function closeWaLangModal() {
+  const m = $('waLangModal');
+  if (m) m.style.display = 'none';
+}
+
+function doShareWhatsApp(lang) {
+  closeWaLangModal();
+  if (!pdfFile) {
+    toast('⚠ કૃપા કરીને પહેલાં PDF બનાવો');
+    return;
+  }
+  const d = data();
+  const text = lang === 'en' ? messageEn(d) : messageGu(d);
+
+  // 1. Download PDF locally
+  download(pdfFile);
+  toast('✅ PDF Download થઈ – WhatsApp Web માં Attach કરો');
+
+  // 2. Open WhatsApp Web or Mobile in new tab
+  const mob = (d.mobile || '').replace(/\D/g, '');
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  const waUrl = isMobile 
+    ? `https://wa.me/91${mob}?text=${encodeURIComponent(text)}`
+    : `https://web.whatsapp.com/send?phone=91${mob}&text=${encodeURIComponent(text)}`;
+
+  setTimeout(() => {
+    window.open(waUrl, '_blank');
+  }, 400);
+}
+
+async function send(){
+  if (!pdfFile) return;
+  openWaLangModal();
+}
+/* ===== 3-STEP WIZARD NAVIGATION ===== */
+let currentStep = 1;
+
+function goToStep(s, validate = true) {
+  if (s > currentStep && validate) {
+    if (currentStep === 1) {
+      if (!S.date) {
+        toast('⚠ કૃપા કરીને Departure તારીખ પસંદ કરો');
+        if (S.tourType === 'private' && $('pvtDate')) { $('pvtDate').focus(); $('pvtDate').classList.add('bad'); }
+        return false;
+      }
+      const nm = $('name').value.trim();
+      const mob = $('mobile').value.trim();
+      if (!nm) {
+        $('name').classList.add('bad');
+        toast('⚠ ગ્રાહકનું નામ ઉમેરો');
+        $('name').focus();
+        return false;
+      }
+      if (!/^\d{10}$/.test(mob)) {
+        $('mobile').classList.add('bad');
+        toast('⚠ 10 આંકડાનો સાચો મોબાઇલ નંબર ભરો');
+        $('mobile').focus();
+        return false;
+      }
+    }
+  }
+
+  currentStep = s;
+
+  // Tabs & Panels
+  [1, 2, 3].forEach(n => {
+    const tab = $(`tabStep${n}`);
+    const panel = $(`fstep${n}`);
+    if (tab) {
+      tab.classList.toggle('active', n === currentStep);
+      tab.classList.toggle('done', n < currentStep);
+    }
+    if (panel) {
+      panel.classList.toggle('active', n === currentStep);
+    }
+  });
+
+  const fill = $('stepProgressFill');
+  if (fill) {
+    fill.style.width = (currentStep === 1 ? '33.33%' : currentStep === 2 ? '66.66%' : '100%');
+  }
+
+  // Update bottom action bar buttons
+  const actBack = $('actBackBtn');
+  const actNext = $('actNextBtn');
+  const makeBtn = $('makeBtn');
+  const waBtn = $('waBtn');
+
+  if (actBack) actBack.hidden = (currentStep === 1);
+
+  if (currentStep === 1) {
+    if (actNext) { actNext.hidden = false; actNext.textContent = 'આગળ (Step 2) →'; }
+    if (makeBtn) makeBtn.hidden = true;
+    if (waBtn) waBtn.hidden = true;
+  } else if (currentStep === 2) {
+    if (actNext) { actNext.hidden = false; actNext.textContent = 'આગળ (Step 3) →'; }
+    if (makeBtn) makeBtn.hidden = true;
+    if (waBtn) waBtn.hidden = true;
+  } else if (currentStep === 3) {
+    if (actNext) actNext.hidden = true;
+    if (pdfFile) {
+      if (makeBtn) makeBtn.hidden = true;
+      if (waBtn) waBtn.hidden = false;
+    } else {
+      if (makeBtn) makeBtn.hidden = false;
+      if (waBtn) waBtn.hidden = true;
+    }
+  }
+
+  // Scroll smoothly to top of stepper
+  const topEl = document.querySelector('.stepper-head');
+  if (topEl) {
+    topEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  return true;
+}
+
+function nextStep() { if (currentStep < 3) goToStep(currentStep + 1, true); }
+function prevStep() { if (currentStep > 1) goToStep(currentStep - 1, false); }
+
+document.querySelectorAll('.step-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const targetStep = parseInt(tab.dataset.step, 10);
+    if (targetStep < currentStep) {
+      goToStep(targetStep, false);
+    } else if (targetStep > currentStep) {
+      goToStep(targetStep, true);
+    }
+  });
+});
+
 $('makeBtn').onclick = makePDF;
 $('waBtn').onclick = send;
 $('newBtn').onclick = () => { resetForm(); scrollTo({ top: 0, behavior: 'smooth' }); toast('નવું બુકિંગ'); };
