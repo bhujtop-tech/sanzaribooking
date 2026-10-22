@@ -218,18 +218,24 @@ textarea.in{height:64px;padding-top:10px;resize:vertical}
 .a4 .pl em{font-style:normal;font-size:9.5px;font-weight:700;color:#fff;background:var(--saffron);border-radius:99px;padding:1px 7px;margin-left:6px}
 .a4 .xl{display:flex;flex-wrap:wrap;gap:5px}
 .a4 .xl span{font-size:11px;font-weight:600;color:#B5402F;background:#FFF1EC;border:1px solid #F7D5CA;border-radius:99px;padding:2px 9px}
-.a4.p2 .top img{height:38px}
-.a4.p2 .card{padding:8px 12px;margin-top:6px}
-.a4.p2 .ch{margin-bottom:4px;font-size:12px}
-.a4.p2 .ban{height:90px;margin-top:6px}.a4.p2 .ban .in2{top:10px}.a4.p2 .ban .pills{bottom:8px}.a4.p2 .pg{padding:18px 32px 60px}.a4.p2 .foot{bottom:12px;left:32px;right:32px}
-.a4.p2 .ban h3{font-size:22px}
-.a4.p2 .dot{width:28px;height:28px;font-size:13px}
-.a4.p2 .stop b{font-size:12px;line-height:1.2}
-.a4.p2 .st .im{height:36px}
-.a4.p2 .s .im{height:34px}
-.a4.p2 .s .nm{padding:2px 5px 3px;font-size:10px;line-height:1.15}
-.a4.p2 .pl{padding:3px 8px;margin-top:3px;font-size:11px}
+.a4.p2 .top img{height:44px}
+.a4.p2 .card{padding:12px 16px;margin-top:10px}
+.a4.p2 .ch{margin-bottom:7px;font-size:13px}
+.a4.p2 .ban{height:125px;margin-top:10px}.a4.p2 .ban .in2{top:14px;left:20px;right:20px}.a4.p2 .ban .pills{bottom:12px;left:20px}.a4.p2 .pg{padding:22px 34px 60px}.a4.p2 .foot{bottom:14px;left:34px;right:34px}
+.a4.p2 .ban h3{font-size:26px}
+.a4.p2 .dot{width:34px;height:34px;font-size:14px}
+.a4.p2 .stop b{font-size:12.5px;line-height:1.2}
+.a4.p2 .st .im{height:50px}
+.a4.p2 .s .im{height:46px}
+.a4.p2 .s .nm{padding:3px 5px 4px;font-size:10.5px;line-height:1.18}
+.a4.p2 .pl{padding:5px 10px;margin-top:5px;font-size:12px}
 .a4 .cred{font-size:7px;color:#9AA7B6;margin-top:4px;line-height:1.2}
+.a4.pol-page .top img{height:36px}
+.a4.pol-page .pg{padding:18px 30px 60px}
+.a4.pol-page .foot{bottom:12px;left:30px;right:30px}
+.hdr-pdf-btn{font-size:12px;font-weight:700;color:#fff;background:linear-gradient(135deg,#F5A623,#E07B00);border:0;padding:6px 13px;border-radius:99px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;box-shadow:0 3px 10px rgba(240,138,0,0.28);transition:all .15s;white-space:nowrap}
+.hdr-pdf-btn:active{transform:scale(.95)}
+.hdr-pdf-btn:disabled{opacity:.6;cursor:not-allowed}
 </style>
 </head>
 <body>
@@ -237,6 +243,7 @@ textarea.in{height:64px;padding-top:10px;resize:vertical}
   <header class="bar">
     <img src="/img/logo.svg" alt="Sanzari Tourism" style="height:36px;width:auto;display:block" onerror="this.onerror=null;this.src='img/logo.svg'">
     <div style="display:flex;align-items:center;gap:8px">
+      <button type="button" id="hdrMakePdfBtn" class="hdr-pdf-btn" onclick="makePDF()" title="Download / Generate PDF Receipt">📄 PDF બનાવો</button>
       <a href="admin.html" class="admin-link-btn" title="Go to Admin Panel">🔐 Admin</a>
       <span class="t">RECEIPT</span>
     </div>
@@ -245,7 +252,10 @@ textarea.in{height:64px;padding-top:10px;resize:vertical}
     <section class="side">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
         <h2 class="ttl">નવું <span>બુકિંગ</span> ઉમેરો</h2>
-        <a href="admin.html" style="font-size:12px;font-weight:700;color:var(--blue);background:#EBF3FE;border:1px solid rgba(43,125,233,.25);padding:6px 12px;border-radius:10px;text-decoration:none;white-space:nowrap">🔐 Admin Panel →</a>
+        <div style="display:flex;gap:6px">
+          <button type="button" onclick="fillSampleData(); toast('✨ સેમ્પલ વિગત ઉમેરાઈ ગઈ');" style="font-size:12px;font-weight:700;color:var(--saffron);background:#FFF6EA;border:1px solid #F3DDA0;padding:6px 12px;border-radius:10px;cursor:pointer;white-space:nowrap">✨ સેમ્પલ વિગત</button>
+          <a href="admin.html" style="font-size:12px;font-weight:700;color:var(--blue);background:#EBF3FE;border:1px solid rgba(43,125,233,.25);padding:6px 12px;border-radius:10px;text-decoration:none;white-space:nowrap">🔐 Admin Panel →</a>
+        </div>
       </div>
       <p class="lead">3 સ્ટેપમાં સરળ બુકિંગ રસીદ બનાવો</p>
 
@@ -389,7 +399,7 @@ textarea.in{height:64px;padding-top:10px;resize:vertical}
     </section>
 
     <section id="pvSec" style="display:none;margin-top:16px">
-      <div class="pvh"><b>Preview</b><span>2 Page · A4 PDF</span></div>
+      <div class="pvh"><b>Preview</b><span>4 Page · A4 PDF</span></div>
       <div class="pv" id="pv"><div class="scaler" id="scaler"></div></div>
     </section>
   </main>
@@ -629,6 +639,42 @@ function resetForm(){
   if (typeof goToStep === 'function') goToStep(1, false);
 }
 
+function fillSampleData(){
+  resetForm();
+  $('name').value = 'Rameshbhai Patel';
+  $('mobile').value = '9876543210';
+  $('city').value = 'Bhuj';
+  $('emp').value = store.get('sz_emp') || 'Priya';
+  $('notes').value = 'Kashmir Winter Special Tour 2026';
+  
+  const sampleDate = (CFG.dates && CFG.dates.length > 1) ? CFG.dates[1] : (CFG.dates[0] || '2026-11-05');
+  S.date = sampleDate;
+  S.adults = 2;
+  S.kids = 1;
+  S.couples = 1;
+  S.pkg = '3ac';
+  S.mode = 'UPI';
+  S.pdfLang = 'gu';
+  
+  members = [
+    { name: 'Rameshbhai Patel', age: '42', type: 'adult' },
+    { name: 'Savitaben Patel', age: '38', type: 'adult' },
+    { name: 'Rahul Patel', age: '6', type: 'kid' }
+  ];
+
+  syncMembersUI();
+  
+  $('advance').value = inr(20000);
+  $('dueby').value = '2026-10-30';
+
+  document.querySelectorAll('#dates .chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.v === S.date));
+  document.querySelectorAll('#pkg .chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.v === S.pkg));
+  document.querySelectorAll('#mode .chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.v === S.mode));
+  document.querySelectorAll('#pdfLangSeg .chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.v === S.pdfLang));
+
+  changed();
+}
+
 /* ===== build controls ===== */
 function initControls() {
   const today = iso(new Date());
@@ -827,16 +873,16 @@ function changed(){ invalidate(); syncUI(); }
 /* ===== receipt template ===== */
 const V = (v, ph = '—') => v ? `<div class="v">${esc(v)}</div>` : `<div class="v e">${ph}</div>`;
 function header(){ return `<div class="top"><img src="${LOGO_DATA_URI}" style="height:50px"><div class="pill">KASHMIR WINTER TOUR 2026</div></div>`; }
-function footer(d, p, lang = 'en'){
+function footer(d, p, lang = 'en', totalPages = 5){
   const isEn = lang === 'en';
   return `<div class="foot"><div class="contact">
     <div class="cb" style="background:linear-gradient(135deg,#2B7DE9,#1B4F9C)"><small>OFFICE · CALL / WHATSAPP</small><b>63551 35992</b></div>
     <div class="cb" style="background:linear-gradient(135deg,#F2B020,#B97A00)"><small>BOOKING · CALL / WHATSAPP</small><b>78746 35992</b></div>
     ${p === 1 ? `<div class="sig"><span>Booked by: <b>${esc(d.emp) || '—'}</b></span><span>Authorised Signature &amp; Stamp</span></div>`
       : `<div class="sig"><span>Booking No. <b>${esc(d.bno)}</b></span><span>${esc(d.name) || '—'} · ${d.members} ${isEn ? 'Pax' : 'સભ્યો'}</span></div>`}
-  </div><div class="addr"><span><b>Sanzari Tourism</b> · Office 210, Laxmi Chambers, New Station Road, Bhuj, Kutch</span><span class="pno">PAGE ${p}/2 &nbsp;·&nbsp; <span class="since">SINCE 1990</span></span></div></div>`;
+  </div><div class="addr"><span><b>Sanzari Tourism</b> · Office 210, Laxmi Chambers, New Station Road, Bhuj, Kutch</span><span class="pno">PAGE ${p}/${totalPages} &nbsp;·&nbsp; <span class="since">SINCE 1990</span></span></div></div>`;
 }
-function page1(d, lang = 'en'){
+function page1(d, lang = 'en', totalPages = 5){
   const isEn = lang === 'en';
   const dd = d.date ? `${fd(d.date)} · ${WD[pd(d.date).getDay()]}` : '';
   const pk = d.pkg === 'sleeper' ? (isEn ? 'Sleeper Train' : 'સ્લીપર ટ્રેન') : (isEn ? '3AC Train' : '3AC ટ્રેન');
@@ -892,9 +938,9 @@ function page1(d, lang = 'en'){
       <div class="tx">${gu}<small>${en}</small></div>
       <div class="cut" style="color:${c}">${d.advance ? (p === 100 ? 'No Refund' : '− ₹' + inr(Math.round(d.advance * p / 100))) : (p === 100 ? 'No Refund' : p + '%')}<small>${d.advance ? (p === 100 ? 'Advance ₹' + inr(d.advance) : 'Refund ₹' + inr(d.advance - Math.round(d.advance * p / 100))) : 'of Advance'}</small></div></div>`).join('')}</div>
   </div>
-  </div>${footer(d, 1, lang)}</div>`;
+  </div>${footer(d, 1, lang, totalPages)}</div>`;
 }
-function page2(d, lang = 'en'){
+function page2(d, lang = 'en', totalPages = 5){
   const isEn = lang === 'en';
   const stays = isEn ? [
     ['srinagar','Srinagar','2 Nights','#FFEBD1','#F08A00'],
@@ -973,10 +1019,463 @@ function page2(d, lang = 'en'){
       <div class="xl">${exclusions.map(x => `<span>${x}</span>`).join('')}</div>
       <div class="note" style="margin-top:6px">${isEn ? '🪪 Please carry original Aadhaar / ID Card during travel.' : '🪪 યાત્રા દરમિયાન Aadhaar / ID Card સાથે રાખવું.'}</div></div>
   </div>
-  </div><div class="foot"><div class="addr" style="margin-top:0"><span><b>Sanzari Tourism</b> · Office 210, Laxmi Chambers, New Station Road, Bhuj, Kutch · <b>📞 63551 35992 · 78746 35992</b></span><span class="pno">PAGE 2/2 &nbsp;·&nbsp; <span class="since">SINCE 1990</span></span></div>
+  </div><div class="foot"><div class="addr" style="margin-top:0"><span><b>Sanzari Tourism</b> · Office 210, Laxmi Chambers, New Station Road, Bhuj, Kutch · <b>📞 63551 35992 · 78746 35992</b></span><span class="pno">PAGE 2/${totalPages} &nbsp;·&nbsp; <span class="since">SINCE 1990</span></span></div>
   <div class="cred">Booking No. ${esc(d.bno)} · ${esc(d.name)} &nbsp;|&nbsp; Kashmir Winter Tour 2026</div></div></div>`;
 }
-function render(el, d, lang = S.pdfLang || 'en'){ el.innerHTML = page1(d, lang) + page2(d, lang); }
+
+/* ===== POLICY DATA ===== */
+const GU_POLICY = [
+  {
+    num: 1,
+    title: "1. પેકેજમાં શું સામેલ હશે?",
+    text: "દરેક ટૂર પેકેજમાં અલગ-અલગ સુવિધાઓ હોય છે. બુકિંગ પહેલાં તમને લેખિતમાં જણાવવામાં આવશે કે પેકેજમાં શું સામેલ છે:",
+    bullets: [
+      "Train, Bus, Flight અથવા Cab, જે પેકેજમાં લખ્યું હોય તે.",
+      "Hotel અને કેટલા દિવસનું રોકાણ.",
+      "Breakfast, Dinner અથવા અન્ય ભોજન, જે પેકેજમાં સામેલ હોય.",
+      "Sightseeing માટેની ગાડી અને તેના દિવસો.",
+      "Tour Manager અથવા Guide, જો પેકેજમાં સામેલ હોય."
+    ],
+    note: "પેકેજમાં જે સુવિધાનો ઉલ્લેખ ન હોય, તે સામેલ ગણવામાં આવશે નહીં."
+  },
+  {
+    num: 2,
+    title: "2. પેકેજમાં શું સામેલ નથી?",
+    text: "નીચેના ખર્ચ સામાન્ય રીતે પેકેજમાં સામેલ હોતા નથી:",
+    bullets: [
+      "Lunch, Shikara Ride, Horse Riding, Gondola / Cable Car Ticket",
+      "Garden અને અન્ય સ્થળોની Entry Ticket, Local Union Cab",
+      "Adventure Activities, Shopping, Laundry, Room Service",
+      "વધારાનું ભોજન/પીણું, વધારાની Hotel Night, પેકેજ બહારની ગાડી"
+    ],
+    note: "ગ્રાહકને જરૂર હોય તો સંઝરી ટુર્સ મદદ કરી શકે છે. તેનો વધારાનો ખર્ચ ગ્રાહકે ચૂકવવાનો રહેશે."
+  },
+  {
+    num: 3,
+    title: "3. હોટેલ વિશેના નિયમો",
+    text: "તમને પેકેજમાં જણાવેલી Hotel Category પ્રમાણે હોટેલ આપવામાં આવશે:",
+    bullets: [
+      "2-Star Hotel એટલે સામાન્ય સારી સુવિધાવાળી હોટેલ (3-Star કે Luxury ન માનવી).",
+      "રૂમમાં સામાન્ય રીતે Attached Bathroom અને Basic Facilities હશે.",
+      "ગરમ પાણી, હીટર, ટુવાલ હોટેલ અને ઉપલબ્ધતા પ્રમાણે મળશે.",
+      "ચોક્કસ રૂમ/View/Floor ની ગેરંટી લેખિત ખાતરી હોય તો જ રહેશે."
+    ]
+  },
+  {
+    num: 4,
+    title: "4. વીજળી, હવામાન અને હોટેલની સુવિધાઓ",
+    text: "પહાડી વિસ્તારોમાં ખરાબ હવામાન કે વીજળી જવાથી ગરમ પાણી/હીટર થોડા સમય માટે બંધ થઈ શકે છે.",
+    bullets: [
+      "સંઝરી ટુર્સ શક્ય હોય ત્યાં સુધી વૈકલ્પિક વ્યવસ્થા કરાવશે.",
+      "માત્ર થોડા સમય માટે સુવિધા બંધ થવાથી આપમેળે Refund મળતો નથી."
+    ]
+  },
+  {
+    num: 5,
+    title: "5. રૂમની વ્યવસ્થા",
+    bullets: [
+      "રૂમનું Sharing બુકિંગ પ્રમાણે રહેશે.",
+      "પરિવાર/ગ્રુપને સાથે કે નજીકના રૂમ આપવાનો પ્રયત્ન કરવામાં આવશે.",
+      "વહેલા Check-in કે મોડા Check-out માટે હોટેલની મંજૂરી અને વધારાનો ચાર્જ લાગુ પડી શકે છે."
+    ]
+  },
+  {
+    num: 6,
+    title: "6. બાળકોના પેકેજ ચાર્જ",
+    bullets: [
+      "5 થી 7 વર્ષના બાળક માટે Half Package Fare લાગુ પડી શકે છે.",
+      "Half Fare માં ટ્રેનની અલગ Seat/Berth મળવી જરૂરી નથી.",
+      "7 વર્ષથી વધુ ઉંમરના બાળક માટે Full Package Fare લાગુ પડશે.",
+      "બાળક માટે અલગ Seat કે વધારાની સુવિધા માટે વધારાનો ચાર્જ લાગી શકે છે."
+    ]
+  },
+  {
+    num: 7,
+    title: "7. ટ્રેન, બસ અને અન્ય મુસાફરી",
+    bullets: [
+      "પેકેજમાં જે મુસાફરી સ્પષ્ટ રીતે સામેલ હોય તે જ આપવામાં આવશે.",
+      "ટ્રેન/બસ મોડી થવી, કેન્સલ થવી, ટ્રાફિક કે હવામાન કંપનીના નિયંત્રણમાં નથી.",
+      "માત્ર ટ્રેન કે બસ મોડી થવાથી આપમેળે આખા પેકેજનું Refund મળતું નથી."
+    ]
+  },
+  {
+    num: 8,
+    title: "8. Cab અને Tempo Travellerના નિયમો",
+    bullets: [
+      "ગાડી પેકેજમાં જણાવેલા Route અને સમય પ્રમાણે મળશે.",
+      "વધારાની Sightseeing કે Shopping માટે અલગ ચાર્જ લાગી શકે છે.",
+      "અમુક સ્થળોએ Local Union Cab લેવી જરૂરી હોઈ શકે છે."
+    ]
+  },
+  {
+    num: 9,
+    title: "9. ટૂરના રૂટમાં ફેરફાર",
+    text: "ભારે બરફવર્ષા, Landslide, ટ્રાફિક, સરકારી પ્રતિબંધો કે ખરાબ હવામાનને કારણે Itinerary માં ફેરફાર થઈ શકે છે. ગ્રાહકોને યોગ્ય વૈકલ્પિક વ્યવસ્થા કરવાનો પ્રયત્ન કરાશે."
+  },
+  {
+    num: 10,
+    title: "10. વધારાના રોકાણનો ખર્ચ",
+    text: "જો ગ્રાહક પોતાની ઇચ્છાથી અલગ દિવસે મુસાફરી કરે કે વધારાનો દિવસ રોકાય, તો વધારાની Hotel, Food અને Transportનો ખર્ચ ગ્રાહકે ચૂકવવાનો રહેશે."
+  },
+  {
+    num: 11,
+    title: "11. ભોજનના નિયમો",
+    bullets: [
+      "પેકેજમાં જે ભોજન લખેલું હોય તે જ સામેલ રહેશે (Breakfast + Dinner હોય તો Lunch સામેલ નથી).",
+      "ટ્રેનમાં ભોજનની વ્યવસ્થા Online/Local/Railway Catering દ્વારા થઈ શકે છે.",
+      "ખાસ પ્રકારના ભોજન માટે બુકિંગ વખતે અગાઉથી જણાવવું."
+    ]
+  },
+  {
+    num: 12,
+    title: "12. ટ્રેન અને બસમાં ભોજનનો સમય",
+    text: "ટ્રેન મોડી થવા કે મુસાફરીની સમસ્યાથી ભોજનનો સમય બદલાઈ શકે છે. બાળકો અને વડીલો માટે Snacks સાથે રાખવા."
+  },
+  {
+    num: 13,
+    title: "13. Activities અને Entry Tickets",
+    text: "Shikara, Horse Riding, Gondola, Garden Entry, Boating વગેરેનો ખર્ચ પેકેજમાં લખેલો હોય તો જ સામેલ ગણાશે."
+  },
+  {
+    num: 14,
+    title: "14. બુકિંગ અને પેમેન્ટ",
+    bullets: [
+      "બુકિંગ Confirm કરવા માટે Advance Payment ચૂકવવી જરૂરી છે.",
+      "બાકી પેમેન્ટ ક્યારે કરવાનું છે તે બુકિંગ સમયે જણાવવામાં આવશે.",
+      "દરેક બુકિંગ માટે Payment Receipt અને Confirmation લેવી."
+    ]
+  },
+  {
+    num: 15,
+    title: "15. ટૂર કેન્સલેશન અને Refund",
+    text: "ગ્રાહક ટૂર કેન્સલ કરે તો Refund Service Provider ના નિયમો પ્રમાણે નક્કી થશે. Non-refundable Amount, Ticket/Hotel/Transport Cancellation Charges કપાઈ શકે છે."
+  },
+  {
+    num: 16,
+    title: "16. ટૂર અધવચ્ચે છોડવો અથવા વહેલા પાછા આવવું",
+    text: "ગ્રાહક પોતાની ઇચ્છાથી ટૂર અધવચ્ચે છોડે કે મોડા પહોંચવાના કારણે સુવિધા ચૂકે તો આપમેળે Refund મળતો નથી."
+  },
+  {
+    num: 17,
+    title: "17. ગ્રાહકની જવાબદારીઓ",
+    bullets: [
+      "માનવીય માન્ય ID Proof સાથે રાખવું.",
+      "ટ્રેન, એરપોર્ટ કે Reporting Point પર સમયસર પહોંચવું.",
+      "પોતાના સામાન, કિંમતી વસ્તુઓ અને બાળકોની સંભાળ રાખવી.",
+      "કોઈ Medical Condition કે Allergy હોય તો અગાઉથી જણાવવું."
+    ]
+  },
+  {
+    num: 18,
+    title: "18. સામાન અને કિંમતી વસ્તુઓ",
+    text: "તમારા સામાન અને કિંમતી વસ્તુઓની જવાબદારી તમારી રહેશે. ભૂલાઈ ગયેલ સામાન પાછો મેળવવા શક્ય મદદ કરાશે."
+  },
+  {
+    num: 19,
+    title: "19. ફરિયાદ અથવા સર્વિસમાં સમસ્યા",
+    text: "ટૂર દરમિયાન સુવિધામાં સમસ્યા થાય તો તરત Tour Manager ને જણાવવું જેથી સમયસર ઉકેલ લાવી શકાય."
+  },
+  {
+    num: 20,
+    title: "20. Tour Manager અને Group Support",
+    text: "Tour Manager ગ્રુપનું Coordination, Itinerary માર્ગદર્શન, Hotel/Cab વ્યવસ્થામાં મદદ કરશે."
+  },
+  {
+    num: 21,
+    title: "21. અન્ય સર્વિસ આપનારની જવાબદારી",
+    text: "Hotel, Railway, Airline, Cab વગેરે અલગ Service Providers છે. સંઝરી ટુર્સ તેમાં પૂરી મદદ અને Coordination કરશે."
+  },
+  {
+    num: 22,
+    title: "22. ખરાબ હવામાન અને કુદરતી આફતો",
+    text: "બરફવર્ષા, Landslide, સરકારી પ્રતિબંધ વગેરેમાં મુસાફરોની સુરક્ષાને પ્રાથમિકતા આપી વૈકલ્પિક આયોજન કરાશે."
+  },
+  {
+    num: 23,
+    title: "23. હોટેલ અને સર્વિસ વિશેની અપેક્ષાઓ",
+    text: "2-Star Hotel એટલે 3-Star કે Luxury નથી. અમારો હેતુ પેકેજ મુજબ સ્પષ્ટ અને પારદર્શક સર્વિસ આપવાનો છે."
+  },
+  {
+    num: 24,
+    title: "24. ખાસ માંગણીઓ",
+    text: "ખાસ હોટેલ/રૂમ, Extra Bed, Private Cab કે ખાસ ભોજન ઉપલબ્ધતા અને વધારાના ચાર્જ પર આધારિત રહેશે (લેખિત ખાતરી જરૂરી)."
+  },
+  {
+    num: 25,
+    title: "25. ગ્રુપ ટૂરના નિયમો",
+    bullets: [
+      "Reporting Time નું પાલન કરવું.",
+      "Tour Manager અને Driver ની સૂચનાઓનું પાલન કરવું.",
+      "બીજા મુસાફરો સાથે સારો વ્યવહાર રાખવો."
+    ]
+  },
+  {
+    num: 26,
+    title: "26. સર્વિસની ગુણવત્તા અને પારદર્શિતા",
+    text: "સંઝરી ટુર્સ પેકેજની Inclusions/Exclusions સ્પષ્ટ જણાવે છે અને વાસ્તવિક સમસ્યાઓ ઉકેલવાનો પ્રામાણિક પ્રયત્ન કરે છે."
+  },
+  {
+    num: 27,
+    title: "27. બુકિંગ કરતા પહેલાં ગ્રાહકની સંમતિ",
+    text: "પેમેન્ટ કરીને બુકિંગ કન્ફર્મ કરાવતી વખતે ગ્રાહકે તમામ નિયમો, Inclusions, Cancellation Policy સમજી લીધા હોવાનું ગણાશે."
+  }
+];
+
+const HI_POLICY = [
+  {
+    num: 1,
+    title: "1. PACKAGE INCLUSIONS",
+    text: "हर tour का inclusion अलग हो सकता है। Booking से पहले लिखित रूप में निम्न details दी जाएंगी:",
+    bullets: [
+      "Transportation: Train / Bus / Flight / Cab / Tempo Traveller आदि।",
+      "Hotel accommodation और कितनी nights का stay.",
+      "Breakfast / Dinner / अन्य meals, जैसा package में mentioned हो।",
+      "Sightseeing vehicle और कितने दिनों के लिए vehicle included है।",
+      "Tour escort / tour organiser / guide, यदि package में included हो।"
+    ],
+    note: "जो service written package inclusion में नहीं है, उसे included नहीं माना जाएगा।"
+  },
+  {
+    num: 2,
+    title: "2. PACKAGE EXCLUSIONS / PERSONAL EXPENSES",
+    text: "निम्न expenses सामान्यतः package में शामिल नहीं होते:",
+    bullets: [
+      "Lunch, Shikara ride, Horse riding, Gondola / Cable car tickets",
+      "Garden / Monument entry tickets, Local / Union cab charges",
+      "Adventure activities, Shopping, Personal expenses, Laundry, Room service",
+      "Extra food/beverages, Additional hotel nights, Personal transportation"
+    ],
+    note: "Sanzari Tourism ऐसी extra service arrange करने में सहायता कर सकती है, payment customer करेगा।"
+  },
+  {
+    num: 3,
+    title: "3. HOTEL / ACCOMMODATION POLICY",
+    text: "Hotel category booking confirmation में mentioned category के अनुसार होगी।",
+    bullets: [
+      "2-Star Category Hotel का अर्थ standard/decent accommodation है (3/4-Star luxury न मानें)।",
+      "Clean room, attached bathroom, hot water / geyser, towels उपलब्ध होंगे।",
+      "Heating facility location, season और hotel व्यवस्था के अनुसार मिलेगी।",
+      "Specific hotel name/room view/floor लिखित खातरी होने पर ही guaranteed रहेगा।"
+    ]
+  },
+  {
+    num: 4,
+    title: "4. ELECTRICITY / WEATHER / HOTEL FACILITY",
+    text: "पहाड़ी क्षेत्रों में electricity, weather या local issues के कारण hot water/heating कुछ समय प्रभावित हो सकती है।",
+    bullets: [
+      "Sanzari Tourism hotel के साथ available alternative arrange करने की पूरी कोशिश करेगी।",
+      "Temporary interruption सेवा विफलता या automatic refund का आधार नहीं बनेगा।"
+    ]
+  },
+  {
+    num: 5,
+    title: "5. ROOM ALLOCATION",
+    bullets: [
+      "Room allocation booking occupancy के अनुसार होगा।",
+      "Family/group को उपलब्धता अनुसार nearby rooms देने की कोशिश की जाएगी।",
+      "Early check-in / late check-out hotel availability पर निर्भर रहेगा और extra charge लग सकता है।"
+    ]
+  },
+  {
+    num: 6,
+    title: "6. CHILD POLICY",
+    bullets: [
+      "5 वर्ष से ऊपर और 7 वर्ष तक: Half package fare लागू हो सकता है।",
+      "Half-fare child के लिए train में separate berth उपलब्ध होना आवश्यक नहीं है।",
+      "7 वर्ष से अधिक: Full package fare category लागू होगी।",
+      "Child के लिए अलग seat/berth या extra service हेतु additional charges लागू हो सकते हैं।"
+    ]
+  },
+  {
+    num: 7,
+    title: "7. TRANSPORTATION POLICY",
+    bullets: [
+      "Transportation केवल वही included होगी जो package में clearly mentioned है।",
+      "Train/bus/flight delay, cancellation, traffic, weather कंपनी के नियंत्रण में नहीं हैं।",
+      "Sanzari Tourism reasonable assistance प्रदान करेगी। Delay से full refund का हकदार नहीं बनता।"
+    ]
+  },
+  {
+    num: 8,
+    title: "8. CAB / VEHICLE POLICY",
+    bullets: [
+      "Vehicle का उपयोग itinerary और mentioned duration के अनुसार किया जाएगा।",
+      "Personal sightseeing/extra route के लिए additional charge लगेगा।",
+      "Local union restrictions के कारण कुछ जगहों पर local union cab लेनी पड़ सकती है।"
+    ]
+  },
+  {
+    num: 9,
+    title: "9. ITINERARY CHANGE POLICY",
+    text: "Heavy snowfall, road blockage, landslide, traffic, government restrictions या bad weather के कारण itinerary में बदलाव हो सकता है। Customer को सूचित कर best alternative दिया जाएगा।"
+  },
+  {
+    num: 10,
+    title: "10. EXTRA NIGHT / EXTRA STAY",
+    text: "यदि customer अपनी सुविधा से original itinerary से अलग travel करे और extra hotel night या transport ले, तो उसका अतिरिक्त खर्च customer का होगा।"
+  },
+  {
+    num: 11,
+    title: "11. MEAL POLICY",
+    bullets: [
+      "Package में केवल वही meals शामिल होंगे जो clearly mentioned हैं (Breakfast + Dinner होने पर Lunch शामिल नहीं है)।",
+      "Train journey में meal availability अनुसार Online/Local/Railway Catering से दिया जाएगा।",
+      "Special dietary requirement की जानकारी booking के समय पहले से दें।"
+    ]
+  },
+  {
+    num: 12,
+    title: "12. TRAIN / BUS FOOD & TIMING",
+    text: "Train delay या travel schedule बदलने पर meal timing बदल सकती है। बच्चों/वृद्धों के लिए personal snacks व दवाइयाँ साथ रखें।"
+  },
+  {
+    num: 13,
+    title: "13. ACTIVITIES & ENTRY TICKETS",
+    text: "Shikara, horse riding, Gondola, garden entry, boating, local cab आदि तभी included माने जाएँगे जब package में specifically लिखा हो।"
+  },
+  {
+    num: 14,
+    title: "14. BOOKING & PAYMENT",
+    bullets: [
+      "Booking confirmation के लिए advance payment आवश्यक है।",
+      "Balance payment की due date confirmation में बताई जाएगी।",
+      "हर booking के लिए payment receipt / confirmation voucher प्राप्त करें।"
+    ]
+  },
+  {
+    num: 15,
+    title: "15. CANCELLATION & REFUND",
+    text: "Cancellation के मामले में refund vendor rules और booking terms अनुसार होगा। Ticket, hotel व transport cancellation charges deduct किए जाएँगे।"
+  },
+  {
+    num: 16,
+    title: "16. NO-SHOW / EARLY RETURN",
+    text: "यदि customer बीच में tour छोड़ता है या देरी से पहुँचता है, तो unused service का automatic refund नहीं होगा।"
+  },
+  {
+    num: 17,
+    title: "17. CUSTOMER RESPONSIBILITY",
+    bullets: [
+      "Valid ID documents साथ रखें।",
+      "Train/airport/reporting point पर समय से पहुँचें।",
+      "अपने luggage, valuables व बच्चों की जिम्मेदारी स्वयं रखें।",
+      "Medical condition या special requirement पहले से बताएं।"
+    ]
+  },
+  {
+    num: 18,
+    title: "18. LUGGAGE & PERSONAL BELONGINGS",
+    text: "Luggage व valuables की जिम्मेदारी customer की रहेगी। भूली गई वस्तुओं को ढूंढने में उचित सहायता की जाएगी।"
+  },
+  {
+    num: 19,
+    title: "19. COMPLAINT / SERVICE ISSUE POLICY",
+    text: "Tour के दौरान किसी service में समस्या होने पर तुरंत Tour Organiser को बताएं ताकि उसी समय समाधान किया जा सके।"
+  },
+  {
+    num: 20,
+    title: "20. TOUR ORGANISER / GROUP SUPPORT",
+    text: "Tour Organiser group coordination, itinerary guidance, hotel/transport coordination व सहायता प्रदान करेगा।"
+  },
+  {
+    num: 21,
+    title: "21. THIRD-PARTY SERVICE PROVIDERS",
+    text: "Hotels, railways, airlines, bus operators व local cab operators स्वतंत्र सेवा प्रदाता हैं। कंपनी पूरा समन्वय करेगी।"
+  },
+  {
+    num: 22,
+    title: "22. WEATHER / NATURAL EVENTS / FORCE MAJEURE",
+    text: "Natural disaster, snowfall, landslide या road closure की स्थिति में सुरक्षा प्राथमिक होगी और उपलब्ध विकल्प दिए जाएँगे।"
+  },
+  {
+    num: 23,
+    title: "23. HOTEL / SERVICE EXPECTATION",
+    text: "2-Star Hotel का अर्थ standard accommodation है। हमारा उद्देश्य पारदर्शी एवं ईमानदार सेवा प्रदान करना है।"
+  },
+  {
+    num: 24,
+    title: "24. SPECIAL REQUESTS",
+    text: "Special hotel/room, extra bed, extra night, private transfer आदि उपलब्धता व अतिरिक्त शुल्क पर निर्भर होंगे (लिखित खातरी आवश्यक)।"
+  },
+  {
+    num: 25,
+    title: "25. GROUP TOUR DISCIPLINE",
+    bullets: [
+      "Reporting time का पालन करें।",
+      "Tour organiser/driver के निर्देशों का पालन करें।",
+      "अन्य सह-यात्रियों के साथ सौहार्दपूर्ण व्यवहार रखें।"
+    ]
+  },
+  {
+    num: 26,
+    title: "26. TOUR QUALITY & TRANSPARENCY",
+    text: "Sanzari Tourism वास्तविक inclusions/exclusions स्पष्ट बताती है और किसी भी समस्या का उचित समाधान करने का प्रयास करती है।"
+  },
+  {
+    num: 27,
+    title: "27. CUSTOMER ACCEPTANCE",
+    text: "Booking payment करने के बाद यह माना जाएगा कि customer ने सभी नियम, inclusions, exclusions व cancellation policy समझ ली है।"
+  }
+];
+
+function renderPolicyPagePart(d, items, titleText, partLabel, pageNum, totalPages, isFinalPage = false) {
+  const cardsHtml = items.map(item => {
+    let bulletsHtml = '';
+    if (item.bullets && item.bullets.length) {
+      bulletsHtml = `<ul style="margin-top:3px;padding-left:14px;list-style-type:disc">${item.bullets.map(b => `<li style="font-size:10px;color:#2A3D55;line-height:1.35;margin-bottom:2px">${esc(b)}</li>`).join('')}</ul>`;
+    }
+    let noteHtml = item.note ? `<div style="font-size:10px;font-weight:600;color:var(--goldDeep);margin-top:3px">${esc(item.note)}</div>` : '';
+    let textHtml = item.text ? `<div style="font-size:10.5px;color:var(--ink);line-height:1.38;font-weight:500">${esc(item.text)}</div>` : '';
+
+    return `<div style="background:rgba(255,255,255,0.95);border:1px solid #E3EAF3;border-radius:10px;padding:9px 12px;box-shadow:0 2px 8px rgba(14,34,56,0.04);display:flex;flex-direction:column;justify-content:flex-start">
+      <div style="font-size:11.5px;font-weight:700;color:var(--saffron);margin-bottom:3px;line-height:1.2">${esc(item.title)}</div>
+      ${textHtml}
+      ${bulletsHtml}
+      ${noteHtml}
+    </div>`;
+  }).join('');
+
+  const finalBox = isFinalPage ? `<div style="grid-column: 1 / -1; background: linear-gradient(135deg,#FFF6EA,#FFEBD1); border:1.5px dashed #F08A00; border-radius:10px; padding:8px 14px; margin-top:6px; display:flex; justify-content:space-between; align-items:center">
+    <div>
+      <span style="font-size:11.5px; font-weight:700; color:var(--ink)">Sanzari Tourism · Bhuj, Kutch</span> &nbsp;·&nbsp; 
+      <span style="font-size:10.5px; font-weight:600; color:var(--goldDeep); font-style:italic">Travel with clarity. Travel with trust.</span>
+    </div>
+    <div style="font-size:10px; color:var(--muted); font-weight:600">
+      Booking Confirmation &amp; Policy Agreed · Booking No: <b>${esc(d.bno)}</b>
+    </div>
+  </div>` : '';
+
+  return `<div class="a4 pol-page"><div class="bg"></div><div class="pg" style="padding:22px 34px 60px">
+    <div class="top" style="margin-bottom:6px"><img src="${LOGO_DATA_URI}" style="height:38px"><div class="pill" style="padding:5px 14px;font-size:11px">TOUR TERMS &amp; POLICY</div></div>
+    <div style="margin-top:6px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:15px;font-weight:700;color:var(--ink)">${titleText}</div>
+      <span style="font-size:10.5px;font-weight:700;color:var(--goldDeep);background:var(--goldSoft);border:1px solid #F3DDA0;padding:3px 12px;border-radius:99px">${partLabel}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px 12px;align-items:start">
+      ${cardsHtml}
+      ${finalBox}
+    </div>
+    </div>${footer(d, pageNum, 'en', totalPages)}</div>`;
+}
+
+function render(el, d, lang = S.pdfLang || 'en'){
+  const isGu = lang === 'gu';
+  const totalPages = 4;
+
+  let html = page1(d, lang, totalPages) + page2(d, lang, totalPages);
+
+  if (isGu) {
+    // Gujarati Policy (2 spacious pages: 01-14 on Page 3, 15-27 on Page 4)
+    html += renderPolicyPagePart(d, GU_POLICY.slice(0, 14), 'સંઝરી ટુર્સ એન્ડ ટ્રાવેલ્સ – નિયમો અને શરતો', 'ભાગ ૧ (૦૧ - ૧૪)', 3, totalPages, false);
+    html += renderPolicyPagePart(d, GU_POLICY.slice(14, 27), 'સંઝરી ટુર્સ એન્ડ ટ્રાવેલ્સ – નિયમો અને શરતો', 'ભાગ ૨ (૧૫ - ૨૭)', 4, totalPages, true);
+  } else {
+    // English Policy (2 spacious pages: 01-14 on Page 3, 15-27 on Page 4)
+    html += renderPolicyPagePart(d, HI_POLICY.slice(0, 14), 'SANZARI TOURISM – TOUR TERMS & CONDITIONS', 'PART 1 (01 - 14)', 3, totalPages, false);
+    html += renderPolicyPagePart(d, HI_POLICY.slice(14, 27), 'SANZARI TOURISM – TOUR TERMS & CONDITIONS', 'PART 2 (15 - 27)', 4, totalPages, true);
+  }
+
+  el.innerHTML = html;
+}
 
 /* ===== preview scaling ===== */
 function fit(){
@@ -1004,7 +1503,10 @@ async function makePDF(targetLang){
   S.pdfLang = lang;
   document.querySelectorAll('#pdfLangSeg .chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.v === lang));
   const d = data(); if (!validate(d)) { toast('⚠ જરૂરી વિગત ભરો'); return; }
-  const btn = $('makeBtn'); btn.disabled = true; btn.lastChild.textContent = 'બની રહી છે…';
+  const btn = $('makeBtn');
+  const hdrBtn = $('hdrMakePdfBtn');
+  if (btn) { btn.disabled = true; if (btn.lastChild) btn.lastChild.textContent = 'બની રહી છે…'; }
+  if (hdrBtn) { hdrBtn.disabled = true; hdrBtn.textContent = '⏳ બની રહી છે…'; }
   try {
     await document.fonts.ready;
     const exp = $('exp'); render(exp, d, lang);
@@ -1062,7 +1564,10 @@ async function makePDF(targetLang){
       toast(cloudSynced ? '✅ PDF તૈયાર – Firestore & sanzariaccount માં Sync થઈ ✓' : '✅ PDF તૈયાર છે – હવે WhatsApp પર મોકલો');
     }
   } catch (e) { console.error(e); toast('PDF બનાવવામાં ભૂલ થઈ, ફરી પ્રયત્ન કરો'); }
-  finally { btn.disabled = false; btn.lastChild.textContent = 'PDF બનાવો'; }
+  finally {
+    if (btn) { btn.disabled = false; if (btn.lastChild) btn.lastChild.textContent = 'PDF બનાવો'; }
+    if (hdrBtn) { hdrBtn.disabled = false; hdrBtn.textContent = '📄 PDF બનાવો'; }
+  }
 }
 function messageEn(d){
   const dueStr = d.due ? `₹${inr(d.due)}` : 'Fully Paid ✓';
@@ -1197,7 +1702,7 @@ $('makeBtn').onclick = makePDF;
 $('waBtn').onclick = send;
 $('newBtn').onclick = () => { resetForm(); scrollTo({ top: 0, behavior: 'smooth' }); toast('નવું બુકિંગ'); };
 
-resetForm();
+fillSampleData();
 document.fonts && document.fonts.ready.then(fit);
 </script>
 </body>
