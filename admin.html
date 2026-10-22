@@ -747,6 +747,9 @@ function logout() {
 }
 
 /* ── HELPERS ── */
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
 function toast(t) {
   const el = document.getElementById('toast');
   if (!el) return;

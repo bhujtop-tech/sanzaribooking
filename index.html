@@ -371,6 +371,12 @@ textarea.in{height:64px;padding-top:10px;resize:vertical}
             <label class="fl"><span><b>બાકી રકમ ક્યાં સુધી</b> · Due By</span><input class="in" id="dueby" type="date"></label>
             <label class="fl"><span><b>Booked By</b> · Employee</span><input class="in" id="emp" placeholder="તમારું નામ"></label>
           </div>
+          <div class="fl" style="margin-top:12px"><span><b>PDF ભાષા</b> · PDF Language *</span>
+            <div class="seg" id="pdfLangSeg">
+              <button type="button" class="chip" data-v="en" aria-pressed="true" style="padding:9px 6px;text-align:center">🇬🇧 English PDF</button>
+              <button type="button" class="chip" data-v="gu" aria-pressed="false" style="padding:9px 6px;text-align:center">🇮🇳 ગુજરાતી PDF</button>
+            </div>
+          </div>
           <label class="fl"><span><b>નોંધ</b> · Notes</span><textarea class="in" id="notes" maxlength="90" placeholder="(Optional)"></textarea></label>
           <div class="sum"><div class="sbox"><span>કુલ રકમ</span><b id="sTotal">₹0</b></div><div class="sbox due" id="sDueBox"><span>બાકી રકમ · Due</span><b id="sDue">₹0</b></div></div>
           <div class="err" id="err"></div>
@@ -602,7 +608,7 @@ function getMemberTier(ageStr, defaultType) {
 }
 
 /* ===== state ===== */
-const S = { adults: 1, kids: 0, couples: 0, tourType: 'group', pkg: 'sleeper', date: '', mode: 'UPI', manualTotal: false };
+const S = { adults: 1, kids: 0, couples: 0, tourType: 'group', pkg: 'sleeper', date: '', mode: 'UPI', pdfLang: 'en', manualTotal: false };
 let pdfFile = null;
 let members = []; // [{name, age, type:'adult'|'kid'}]
 
@@ -610,10 +616,11 @@ function nextNo(){ const M=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP
 function resetForm(){
   CFG = getCfg();
   ['name','mobile','city','advance','notes','total'].forEach(k => $(k).value = '');
-  Object.assign(S, { adults: 1, kids: 0, couples: 0, tourType: 'group', pkg: 'sleeper', date: '', mode: 'UPI', manualTotal: false });
+  Object.assign(S, { adults: 1, kids: 0, couples: 0, tourType: 'group', pkg: 'sleeper', date: '', mode: 'UPI', pdfLang: 'en', manualTotal: false });
   $('bno').value = nextNo(); $('bdate').value = iso(new Date()); $('dueby').value = '';
   $('emp').value = store.get('sz_emp') || '';
   document.querySelectorAll('.in.bad').forEach(e => e.classList.remove('bad'));
+  document.querySelectorAll('#pdfLangSeg .chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.v === S.pdfLang));
   $('err').style.display = 'none';
   members = [];
   initControls();
@@ -660,6 +667,16 @@ function initControls() {
       changed();
     }
   };
+
+  const pdfLangBox = $('pdfLangSeg');
+  if (pdfLangBox) {
+    pdfLangBox.onclick = e => {
+      const b = e.target.closest('.chip'); if (!b) return;
+      S.pdfLang = b.dataset.v;
+      document.querySelectorAll('#pdfLangSeg .chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.v === S.pdfLang));
+      changed();
+    };
+  }
 
   $('mode').onclick = e => { const b = e.target.closest('.chip'); if (!b) return; S.mode = b.dataset.v; changed(); };
   $('pkg').onclick = e => { const b = e.target.closest('.chip'); if (!b) return; S.pkg = b.dataset.v; changed(); };
@@ -763,6 +780,7 @@ function syncUI(){
   document.querySelectorAll('#dates .chip').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === S.date));
   document.querySelectorAll('#mode .chip').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === S.mode));
   document.querySelectorAll('#pkg .chip').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === S.pkg));
+  document.querySelectorAll('#pdfLangSeg .chip').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === S.pdfLang));
   if (!S.manualTotal) $('total').value = inr(calcTotal());
   $('autoBtn').hidden = !S.manualTotal;
   const d = data();
@@ -771,100 +789,178 @@ function syncUI(){
   $('sDueBox').className = 'sbox ' + (d.due === 0 && d.total > 0 ? 'paid' : 'due');
   const complete = d.name && /^\d{10}$/.test(d.mobile) && d.date && d.advance > 0;
   const pvSec = $('pvSec'); if(pvSec) pvSec.style.display = complete ? 'block' : 'none';
-  if(complete){ render($('scaler'), d); fit(); }
+  if(complete){ render($('scaler'), d, S.pdfLang); fit(); }
+  updateActionButtons();
 }
 
-function invalidate(){ pdfFile = null; $('waBtn').hidden = true; $('makeBtn').hidden = false; }
+function updateActionButtons() {
+  const actBack = $('actBackBtn');
+  const actNext = $('actNextBtn');
+  const makeBtn = $('makeBtn');
+  const waBtn = $('waBtn');
+
+  if (actBack) actBack.hidden = (currentStep === 1);
+
+  if (currentStep === 1) {
+    if (actNext) { actNext.hidden = false; actNext.textContent = 'આગળ (Step 2) →'; }
+    if (makeBtn) makeBtn.hidden = true;
+    if (waBtn) waBtn.hidden = true;
+  } else if (currentStep === 2) {
+    if (actNext) { actNext.hidden = false; actNext.textContent = 'આગળ (Step 3) →'; }
+    if (makeBtn) makeBtn.hidden = true;
+    if (waBtn) waBtn.hidden = true;
+  } else if (currentStep === 3) {
+    if (actNext) actNext.hidden = true;
+    if (pdfFile) {
+      if (makeBtn) makeBtn.hidden = true;
+      if (waBtn) waBtn.hidden = false;
+    } else {
+      if (makeBtn) makeBtn.hidden = false;
+      if (waBtn) waBtn.hidden = true;
+    }
+  }
+}
+
+function invalidate(){ pdfFile = null; updateActionButtons(); }
 function changed(){ invalidate(); syncUI(); }
 
 /* ===== receipt template ===== */
 const V = (v, ph = '—') => v ? `<div class="v">${esc(v)}</div>` : `<div class="v e">${ph}</div>`;
 function header(){ return `<div class="top"><img src="/img/logo.svg" onerror="this.onerror=null;this.src='${LOGO_DATA_URI}'" style="height:50px"><div class="pill">KASHMIR WINTER TOUR 2026</div></div>`; }
-function footer(d, p){
+function footer(d, p, lang = 'en'){
+  const isEn = lang === 'en';
   return `<div class="foot"><div class="contact">
     <div class="cb" style="background:linear-gradient(135deg,#2B7DE9,#1B4F9C)"><small>OFFICE · CALL / WHATSAPP</small><b>63551 35992</b></div>
     <div class="cb" style="background:linear-gradient(135deg,#F2B020,#B97A00)"><small>BOOKING · CALL / WHATSAPP</small><b>78746 35992</b></div>
     ${p === 1 ? `<div class="sig"><span>Booked by: <b>${esc(d.emp) || '—'}</b></span><span>Authorised Signature &amp; Stamp</span></div>`
-      : `<div class="sig"><span>Booking No. <b>${esc(d.bno)}</b></span><span>${esc(d.name) || '—'} · ${d.members} સભ્યો</span></div>`}
+      : `<div class="sig"><span>Booking No. <b>${esc(d.bno)}</b></span><span>${esc(d.name) || '—'} · ${d.members} ${isEn ? 'Pax' : 'સભ્યો'}</span></div>`}
   </div><div class="addr"><span><b>Sanzari Tourism</b> · Office 210, Laxmi Chambers, New Station Road, Bhuj, Kutch</span><span class="pno">PAGE ${p}/2 &nbsp;·&nbsp; <span class="since">SINCE 1990</span></span></div></div>`;
 }
-function page1(d){
+function page1(d, lang = 'en'){
+  const isEn = lang === 'en';
   const dd = d.date ? `${fd(d.date)} · ${WD[pd(d.date).getDay()]}` : '';
-  const pk = d.pkg === 'sleeper' ? 'Sleeper Train' : '3AC Train';
-  const room = d.couples ? `4 Bed Deluxe + ${d.couples} Private Couple Room` : '4 Bed Deluxe Room';
+  const pk = d.pkg === 'sleeper' ? (isEn ? 'Sleeper Train' : 'સ્લીપર ટ્રેન') : (isEn ? '3AC Train' : '3AC ટ્રેન');
+  const room = d.couples ? (isEn ? `4 Bed Deluxe + ${d.couples} Private Couple Room` : `4 Bed Deluxe + ${d.couples} સેપરેટ કપલ રૂમ`) : '4 Bed Deluxe Room';
   const paid = d.due === 0 && d.total > 0;
-  const tourLabel = d.tourType === 'private' ? '🚘 Private Tour (પ્રાઇવેટ ટુર)' : '👥 Group Tour (ગૃપ ટુર)';
-  const pol = [
+  const tourLabel = d.tourType === 'private'
+    ? (isEn ? '🚘 Private Tour' : '🚘 Private Tour (પ્રાઇવેટ ટુર)')
+    : (isEn ? '👥 Group Tour' : '👥 Group Tour (ગૃપ ટુર)');
+
+  const pol = isEn ? [
+    ['#FFF4D6','#B97A00','48','HRS BEFORE','Cancellation 48 hrs prior to travel date','25% cancellation fee of advance amount', 25],
+    ['#FFEBD1','#E07B00','24','HRS BEFORE','Cancellation 24 hrs prior to travel date','50% cancellation fee of advance amount', 50],
+    ['#FFE4DD','#E5533D','0','SAME DAY','Same Day Cancellation','100% advance non-refundable (No Refund)', 100]
+  ] : [
     ['#FFF4D6','#B97A00','48','કલાક પહેલાં','મુસાફરીની તારીખથી 48 કલાક પહેલાં Cancel','48 hrs before travel date · 25% cancellation of advance amount', 25],
     ['#FFEBD1','#E07B00','24','કલાક પહેલાં','મુસાફરીની તારીખથી 24 કલાક પહેલાં Cancel','24 hrs before travel date · 50% cancellation of advance amount', 50],
-    ['#FFE4DD','#E5533D','0','SAME DAY','મુસાફરીના દિવસે જ Cancel','Same day cancellation · Advance amount non-refundable', 100]];
+    ['#FFE4DD','#E5533D','0','SAME DAY','મુસાફરીના દિવસે જ Cancel','Same day cancellation · Advance amount non-refundable', 100]
+  ];
+
   return `<div class="a4"><div class="bg"></div><div class="pg">${header()}
   <div class="hero"><div>
     <div class="eb"><div class="tick"><svg width="11" height="11" viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5" stroke="#fff" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>BOOKING CONFIRMED</div>
-    <h1>બુકિંગ <span>કન્ફર્મ</span> છે!</h1>
-    <div class="sub">Sanzari Tourism સાથે કાશ્મીર યાત્રા માટે આપનો આભાર 🙏</div></div>
-    <div class="meta"><span>Booking No.</span>${V(d.bno)}<span>તારીખ / Date</span>${V(fd(d.bdate))}</div></div>
+    <h1>${isEn ? 'BOOKING <span>CONFIRMED</span>!' : 'બુકિંગ <span>કન્ફર્મ</span> છે!'}</h1>
+    <div class="sub">${isEn ? 'Thank you for choosing Sanzari Tourism for your Kashmir Tour 🙏' : 'Sanzari Tourism સાથે કાશ્મીર યાત્રા માટે આપનો આભાર 🙏'}</div></div>
+    <div class="meta"><span>Booking No.</span>${V(d.bno)}<span>${isEn ? 'Date' : 'તારીખ / Date'}</span>${V(fd(d.bdate))}</div></div>
 
   <div class="r2" style="grid-template-columns:1.12fr 1fr;gap:14px;margin-top:18px">
-    <div class="card"><div class="ch"><div class="ic" style="background:var(--saffron)">👤</div>ગ્રાહકની વિગત <small>Customer</small></div>
-      <div class="l" style="margin-top:0"><b>ગ્રાહકનું નામ</b> · Customer Name</div>${V(d.name)}
-      <div class="r2"><div><div class="l"><b>મોબાઇલ</b> · Mobile</div>${V(d.mobile ? '+91 ' + d.mobile.replace(/(\d{5})(\d+)/,'$1 $2') : '')}</div><div><div class="l"><b>શહેર / ગામ</b> · City</div>${V(d.city)}</div></div>
-      <div class="l"><b>સભ્યો</b> · Members</div>
-      <div class="r3"><div class="v">${d.members}<span class="tag">કુલ</span></div><div class="v">${d.adults}<span class="tag">મોટા</span></div><div class="v">${d.kids}<span class="tag">બાળક</span></div></div>
-      ${d.membersList && d.membersList.filter(m=>m.name).length ? `<div class="l" style="margin-top:8px;font-size:11px;font-weight:600;color:var(--muted)">સભ્ય-સૂચી · MEMBER LIST</div><table style="width:100%;border-collapse:collapse;margin-top:4px">${d.membersList.map((m,i)=>`<tr style="border-bottom:1px solid #ECF0F6"><td style="padding:3px 4px;font-size:11px;color:var(--muted);width:18px">${i+1}</td><td style="padding:3px 6px;font-size:12.5px;font-weight:600">${esc(m.name)||'—'}</td><td style="padding:3px 4px;font-size:11.5px;color:var(--muted);width:36px">${m.age?m.age+' yr':''}</td><td style="padding:3px 4px;text-align:right"><span style="font-size:10px;padding:2px 6px;border-radius:99px;font-weight:600;background:${m.cls==='adult'?'#E1EEFD':m.cls==='kid-mid'?'#E6F4EA':m.cls==='infant'?'#F3E8FF':'#FFF0E0'};color:${m.cls==='adult'?'#2B7DE9':m.cls==='kid-mid'?'#1DAA6B':m.cls==='infant'?'#8B5CF6':'#F08A00'}">${m.tag}</span></td></tr>`).join('')}</table>` : ''}
+    <div class="card"><div class="ch"><div class="ic" style="background:var(--saffron)">👤</div>${isEn ? 'Customer Details' : 'ગ્રાહકની વિગત'} <small>Customer</small></div>
+      <div class="l" style="margin-top:0"><b>${isEn ? 'Customer Name' : 'ગ્રાહકનું નામ'}</b> · Customer Name</div>${V(d.name)}
+      <div class="r2"><div><div class="l"><b>${isEn ? 'Mobile' : 'મોબાઇલ'}</b> · Mobile</div>${V(d.mobile ? '+91 ' + d.mobile.replace(/(\d{5})(\d+)/,'$1 $2') : '')}</div><div><div class="l"><b>${isEn ? 'City' : 'શહેર / ગામ'}</b> · City</div>${V(d.city)}</div></div>
+      <div class="l"><b>${isEn ? 'Members' : 'સભ્યો'}</b> · Members</div>
+      <div class="r3"><div class="v">${d.members}<span class="tag">${isEn ? 'Total' : 'કુલ'}</span></div><div class="v">${d.adults}<span class="tag">${isEn ? 'Adults' : 'મોટા'}</span></div><div class="v">${d.kids}<span class="tag">${isEn ? 'Kids' : 'બાળક'}</span></div></div>
+      ${d.membersList && d.membersList.filter(m=>m.name).length ? `<div class="l" style="margin-top:8px;font-size:11px;font-weight:600;color:var(--muted)">${isEn ? 'MEMBER LIST' : 'સભ્ય-સૂચી · MEMBER LIST'}</div><table style="width:100%;border-collapse:collapse;margin-top:4px">${d.membersList.map((m,i)=>`<tr style="border-bottom:1px solid #ECF0F6"><td style="padding:3px 4px;font-size:11px;color:var(--muted);width:18px">${i+1}</td><td style="padding:3px 6px;font-size:12.5px;font-weight:600">${esc(m.name)||'—'}</td><td style="padding:3px 4px;font-size:11.5px;color:var(--muted);width:36px">${m.age?m.age+' yr':''}</td><td style="padding:3px 4px;text-align:right"><span style="font-size:10px;padding:2px 6px;border-radius:99px;font-weight:600;background:${m.cls==='adult'?'#E1EEFD':m.cls==='kid-mid'?'#E6F4EA':m.cls==='infant'?'#F3E8FF':'#FFF0E0'};color:${m.cls==='adult'?'#2B7DE9':m.cls==='kid-mid'?'#1DAA6B':m.cls==='infant'?'#8B5CF6':'#F08A00'}">${m.tag}</span></td></tr>`).join('')}</table>` : ''}
       </div>
-    <div class="card"><div class="ch"><div class="ic" style="background:var(--blue)">🗓</div>યાત્રાની વિગત <small>Trip</small></div>
-      <div class="l" style="margin-top:0"><b>ટુર ટાઈપ</b> · Tour Type</div>${V(tourLabel)}
-      <div class="l"><b>Departure તારીખ</b> · ભુજથી</div>${V(dd)}
-      <div class="l"><b>Package</b></div>${V(`${pk} · ₹${inr(CFG.prices[d.pkg])} / વ્યક્તિ`)}
-      <div class="l"><b>Room</b></div>${V(room)}</div>
+    <div class="card"><div class="ch"><div class="ic" style="background:var(--blue)">🗓</div>${isEn ? 'Trip Details' : 'યાત્રાની વિગત'} <small>Trip</small></div>
+      <div class="l" style="margin-top:0"><b>${isEn ? 'Tour Type' : 'ટુર ટાઈપ'}</b> · Tour Type</div>${V(tourLabel)}
+      <div class="l"><b>${isEn ? 'Departure Date' : 'Departure તારીખ'}</b> · ${isEn ? 'From Bhuj' : 'ભુજથી'}</div>${V(dd)}
+      <div class="l"><b>Package</b></div>${V(`${pk} · ₹${inr(CFG.prices[d.pkg])} / ${isEn ? 'Person' : 'વ્યક્તિ'}`)}
+      <div class="l"><b>Accommodation</b></div>${V(room)}</div>
   </div>
 
-  <div class="card" style="margin-top:14px"><div class="ch"><div class="ic" style="background:var(--gold)">₹</div>પેમેન્ટની વિગત <small>Payment</small></div>
+  <div class="card" style="margin-top:14px"><div class="ch"><div class="ic" style="background:var(--gold)">₹</div>${isEn ? 'Payment Details' : 'પેમેન્ટની વિગત'} <small>Payment</small></div>
     <div class="pay">
-      <div class="pb"><div class="l"><b>કુલ રકમ</b> · Total Amount</div><div class="amt"><small>₹</small>${inr(d.total)}</div></div>
-      <div class="pb adv"><div class="l"><b>એડવાન્સ જમા</b> · Advance Paid</div><div class="amt"><small>₹</small>${inr(d.advance)}</div></div>
-      <div class="pb ${paid ? 'adv' : 'due'}"><div class="l"><b>બાકી રકમ</b> · Due Amount</div><div class="amt">${paid ? 'PAID ✓' : '<small>₹</small>' + inr(d.due)}</div></div>
+      <div class="pb"><div class="l"><b>${isEn ? 'Total Amount' : 'કુલ રકમ'}</b> · Total Amount</div><div class="amt"><small>₹</small>${inr(d.total)}</div></div>
+      <div class="pb adv"><div class="l"><b>${isEn ? 'Advance Paid' : 'એડવાન્સ જમા'}</b> · Advance Paid</div><div class="amt"><small>₹</small>${inr(d.advance)}</div></div>
+      <div class="pb ${paid ? 'adv' : 'due'}"><div class="l"><b>${isEn ? 'Due Amount' : 'બાકી રકમ'}</b> · Due Amount</div><div class="amt">${paid ? 'PAID ✓' : '<small>₹</small>' + inr(d.due)}</div></div>
     </div>
-    <div class="r3" style="margin-top:2px"><div><div class="l"><b>Payment Mode</b></div>${V(d.mode)}</div><div><div class="l"><b>બાકી રકમ ક્યાં સુધી</b> · Due By</div>${V(paid ? 'Fully Paid' : fd(d.dueby))}</div><div><div class="l"><b>નોંધ</b> · Notes</div>${V(d.notes)}</div></div>
+    <div class="r3" style="margin-top:2px"><div><div class="l"><b>Payment Mode</b></div>${V(d.mode)}</div><div><div class="l"><b>${isEn ? 'Due By' : 'બાકી રકમ ક્યાં સુધી'}</b> · Due By</div>${V(paid ? 'Fully Paid' : fd(d.dueby))}</div><div><div class="l"><b>${isEn ? 'Notes' : 'નોંધ'}</b> · Notes</div>${V(d.notes)}</div></div>
   </div>
 
-  <div class="card" style="margin-top:14px"><div class="ch"><div class="ic" style="background:var(--coral)">!</div>Cancellation Policy <small>રદ કરવાના નિયમો</small></div>
-    <div class="pol">${pol.map(([bg,c,n,u,gu,en,p]) => `<div class="pr"><div class="badge" style="background:${bg};color:${c}">${n === '0' ? '<span style="font-size:15px">આજે</span>' : n + '<span style="font-size:11px"> hr</span>'}<small>${u}</small></div>
-      <div class="tx">${gu} → Advance રકમના ${p === 100 ? 'પૈસા પરત નહીં મળે' : p + '% કપાશે'}<small>${en}</small></div>
+  <div class="card" style="margin-top:14px"><div class="ch"><div class="ic" style="background:var(--coral)">!</div>Cancellation Policy <small>${isEn ? 'Terms' : 'રદ કરવાના નિયમો'}</small></div>
+    <div class="pol">${pol.map(([bg,c,n,u,gu,en,p]) => `<div class="pr"><div class="badge" style="background:${bg};color:${c}">${n === '0' ? `<span style="font-size:13px">${isEn ? 'TODAY' : 'આજે'}</span>` : n + '<span style="font-size:11px"> hr</span>'}<small>${u}</small></div>
+      <div class="tx">${gu}<small>${en}</small></div>
       <div class="cut" style="color:${c}">${d.advance ? (p === 100 ? 'No Refund' : '− ₹' + inr(Math.round(d.advance * p / 100))) : (p === 100 ? 'No Refund' : p + '%')}<small>${d.advance ? (p === 100 ? 'Advance ₹' + inr(d.advance) : 'Refund ₹' + inr(d.advance - Math.round(d.advance * p / 100))) : 'of Advance'}</small></div></div>`).join('')}</div>
   </div>
-  </div>${footer(d, 1)}</div>`;
+  </div>${footer(d, 1, lang)}</div>`;
 }
-function page2(d){
-  const stays = [['srinagar','શ્રીનગર','2 Night','#FFEBD1','#F08A00'],['dal','Houseboat','1 Night','#E1EEFD','#2B7DE9'],['pahalgam','પહેલગામ','1 Night','#DDF4E8','#1DAA6B'],[null,'જમ્મુ','1 Night','#FFF4D6','#B97A00']];
+function page2(d, lang = 'en'){
+  const isEn = lang === 'en';
+  const stays = isEn ? [
+    ['srinagar','Srinagar','2 Nights','#FFEBD1','#F08A00'],
+    ['dal','Houseboat','1 Night','#E1EEFD','#2B7DE9'],
+    ['pahalgam','Pahalgam','1 Night','#DDF4E8','#1DAA6B'],
+    [null,'Jammu','1 Night','#FFF4D6','#B97A00']
+  ] : [
+    ['srinagar','શ્રીનગર','2 Night','#FFEBD1','#F08A00'],
+    ['dal','Houseboat','1 Night','#E1EEFD','#2B7DE9'],
+    ['pahalgam','પહેલગામ','1 Night','#DDF4E8','#1DAA6B'],
+    [null,'જમ્મુ','1 Night','#FFF4D6','#B97A00']
+  ];
+
+  const routeStops = isEn ? [
+    ['BHU', 'Bhuj', 'Start'],
+    ['JAM', 'Jammu', '1 Night'],
+    ['KAS', 'Kashmir', '4 Nights'],
+    ['BHU', 'Bhuj', 'Return']
+  ] : [
+    ['ભુ', 'ભુજ', 'Start'],
+    ['જ', 'જમ્મુ', '1 Night'],
+    ['ક', 'કાશ્મીર', '4 Night'],
+    ['ભુ', 'ભુજ', 'પરત']
+  ];
+
+  const routeLegs = isEn ? [
+    'AC Sleeper Bus +<br>Sleeper Train',
+    'Private Car<br>6 Days',
+    'Sleeper Train +<br>Sleeper Bus'
+  ] : [
+    'AC Sleeper Bus +<br>Sleeper Train',
+    'Private Car<br>6 દિવસ',
+    'Sleeper Train +<br>Sleeper Bus'
+  ];
+
+  const exclusions = isEn
+    ? ['Shikara Ride', 'Gondola Ride', 'Pony Ride', 'Union Cab', 'Garden Entry', 'Shopping', 'Personal Expenses']
+    : ['શિકારા રાઇડ','ગોંડોલા રાઇડ','ઘોડેસવારી','Union Cab','ગાર્ડન Entry','Shopping','અંગત ખર્ચ'];
+
   return `<div class="a4 p2"><div class="bg"></div><div class="pg">${header()}
   <div class="ban" style="margin-top:6px;background-image:url(${IMG.banner})"><div class="sh"></div>
-    <div class="in2"><div class="k">TOUR DETAILS · પ્રવાસની વિગત</div><h3>Kashmir Winter Tour 2026</h3><p>9 દિવસ · ભુજથી ભુજ · 15 જગ્યા Sightseeing</p></div>
-    <div class="pills"><span>👤 ${esc(d.name) || 'Guest'}</span><span>🗓 ${d.date ? fd(d.date) : 'Departure —'}</span><span>👥 ${d.members} સભ્યો</span></div></div>
+    <div class="in2"><div class="k">TOUR DETAILS · ${isEn ? 'Kashmir Tour' : 'પ્રવાસની વિગત'}</div><h3>Kashmir Winter Tour 2026</h3><p>${isEn ? '9 Days · Bhuj to Bhuj · 15 Sightseeing Places' : '9 દિવસ · ભુજથી ભુજ · 15 જગ્યા Sightseeing'}</p></div>
+    <div class="pills"><span>👤 ${esc(d.name) || 'Guest'}</span><span>🗓 ${d.date ? fd(d.date) : 'Departure —'}</span><span>👥 ${d.members} ${isEn ? 'Pax' : 'સભ્યો'}</span></div></div>
 
-  <div class="card" style="margin-top:6px"><div class="ch"><div class="ic" style="background:var(--blue)">➜</div>Route <small>મુસાફરી</small></div>
+  <div class="card" style="margin-top:6px"><div class="ch"><div class="ic" style="background:var(--blue)">➜</div>Route <small>${isEn ? 'Travel Itinerary' : 'મુસાફરી'}</small></div>
     <div class="route">
-      <div class="stop"><div class="dot" style="background:var(--saffron)">ભુ</div><b>ભુજ</b><small>Start</small></div>
-      <div class="leg"><span>AC Sleeper Bus +<br>Sleeper Train</span></div>
-      <div class="stop"><div class="dot" style="background:var(--gold)">જ</div><b>જમ્મુ</b><small>1 Night</small></div>
-      <div class="leg"><span>Private Car<br>6 દિવસ</span></div>
-      <div class="stop"><div class="dot" style="background:var(--blue)">ક</div><b>કાશ્મીર</b><small>4 Night</small></div>
-      <div class="leg"><span>Sleeper Train +<br>Sleeper Bus</span></div>
-      <div class="stop"><div class="dot" style="background:var(--green)">ભુ</div><b>ભુજ</b><small>પરત</small></div>
+      <div class="stop"><div class="dot" style="background:var(--saffron)">${routeStops[0][0]}</div><b>${routeStops[0][1]}</b><small>${routeStops[0][2]}</small></div>
+      <div class="leg"><span>${routeLegs[0]}</span></div>
+      <div class="stop"><div class="dot" style="background:var(--gold)">${routeStops[1][0]}</div><b>${routeStops[1][1]}</b><small>${routeStops[1][2]}</small></div>
+      <div class="leg"><span>${routeLegs[1]}</span></div>
+      <div class="stop"><div class="dot" style="background:var(--blue)">${routeStops[2][0]}</div><b>${routeStops[2][1]}</b><small>${routeStops[2][2]}</small></div>
+      <div class="leg"><span>${routeLegs[2]}</span></div>
+      <div class="stop"><div class="dot" style="background:var(--green)">${routeStops[3][0]}</div><b>${routeStops[3][1]}</b><small>${routeStops[3][2]}</small></div>
     </div></div>
 
-  <div class="card" style="margin-top:6px"><div class="ch"><div class="ic" style="background:var(--saffron)">🏨</div>5 રાત 2 Star Hotel <small>Stay</small></div>
+  <div class="card" style="margin-top:6px"><div class="ch"><div class="ic" style="background:var(--saffron)">🏨</div>${isEn ? '5 Nights 3-Star Hotel & Houseboat' : '5 રાત 2 Star Hotel'} <small>Stay</small></div>
     <div class="stays">${stays.map(([k,n,t,bg,c]) => `<div class="st">${k ? `<div class="im" style="background-image:url('${IMG[k]}');background-size:cover;background-position:center"></div>` : '<div class="im j">🏙️</div>'}<div class="tt">${n}<i style="background:${bg};color:${c}">${t}</i></div></div>`).join('')}</div>
-    <div class="note" style="margin-top:4px"><b>✓</b> દરેક હોટલમાં 4 Bed Deluxe Room &nbsp;<b>✓</b> Breakfast અને Dinner સામેલ &nbsp;<b>✓</b> 35 વર્ષના અનુભવ સાથે Tour Management</div></div>
+    <div class="note" style="margin-top:4px">${isEn ? '<b>✓</b> 4 Bed Deluxe Room in all hotels &nbsp;<b>✓</b> Breakfast & Dinner Included &nbsp;<b>✓</b> 35 Years Experience Tour Management' : '<b>✓</b> દરેક હોટલમાં 4 Bed Deluxe Room &nbsp;<b>✓</b> Breakfast અને Dinner સામેલ &nbsp;<b>✓</b> 35 વર્ષના અનુભવ સાથે Tour Management'}</div></div>
 
-  <div class="card" style="margin-top:6px"><div class="ch"><div class="ic" style="background:var(--green)">📍</div>Sightseeing <small>15 જગ્યા</small></div>
-    <div class="sg">${SIGHTS.map(([k,g,e],i) => `<div class="s"><div class="im" style="background-image:url('${IMG[k]}');background-size:cover;background-position:center"><i>${String(i+1).padStart(2,'0')}</i></div><div class="nm">${g}<small>${e}</small></div></div>`).join('')}</div></div>
+  <div class="card" style="margin-top:6px"><div class="ch"><div class="ic" style="background:var(--green)">📍</div>Sightseeing <small>${isEn ? '15 Places' : '15 જગ્યા'}</small></div>
+    <div class="sg">${SIGHTS.map(([k,g,e],i) => `<div class="s"><div class="im" style="background-image:url('${IMG[k]}');background-size:cover;background-position:center"><i>${String(i+1).padStart(2,'0')}</i></div><div class="nm">${isEn ? e : g}<small>${isEn ? g : e}</small></div></div>`).join('')}</div></div>
 
   <div class="two" style="margin-top:6px">
-    <div class="card"><div class="ch"><div class="ic" style="background:var(--gold)">₹</div>Package Price <small>પ્રતિ વ્યક્તિ</small></div>
-      <div class="pl ${d.pkg === 'sleeper' ? 'sel' : ''}"><span>Sleeper Train સાથે${d.pkg === 'sleeper' ? '<em>આપનું</em>' : ''}</span><b>₹${inr(CFG.prices.sleeper)}</b></div>
-      <div class="pl ${d.pkg === '3ac' ? 'sel' : ''}"><span>3AC Train સાથે${d.pkg === '3ac' ? '<em>આપનું</em>' : ''}</span><b>₹${inr(CFG.prices['3ac'])}</b></div>
+    <div class="card"><div class="ch"><div class="ic" style="background:var(--gold)">₹</div>Package Price <small>${isEn ? 'Per Person' : 'પ્રતિ વ્યક્તિ'}</small></div>
+      <div class="pl ${d.pkg === 'sleeper' ? 'sel' : ''}"><span>${isEn ? 'With Sleeper Train' : 'Sleeper Train સાથે'}${d.pkg === 'sleeper' ? (isEn ? '<em>Selected</em>' : '<em>આપનું</em>') : ''}</span><b>₹${inr(CFG.prices.sleeper)}</b></div>
+      <div class="pl ${d.pkg === '3ac' ? 'sel' : ''}"><span>${isEn ? 'With 3AC Train' : '3AC Train સાથે'}${d.pkg === '3ac' ? (isEn ? '<em>Selected</em>' : '<em>આપનું</em>') : ''}</span><b>₹${inr(CFG.prices['3ac'])}</b></div>
       <div class="pl ${d.couples ? 'sel' : ''}"><span>Private Couple Room</span><b>+₹${inr(CFG.coupleExtra)} <small style="font-size:10px;color:var(--muted)">/ couple</small></b></div>
       <div style="font-size:9.5px;color:var(--muted);margin-top:4px;line-height:1.2;display:grid;grid-template-columns:1fr 1fr;gap:2px 6px">
         <div>• <b>👶 0-4 Yrs:</b> Free / Infant</div>
@@ -873,14 +969,14 @@ function page2(d){
         <div>• <b>👤 12+ Yrs:</b> 100% Full Ticket</div>
       </div>
     </div>
-    <div class="card"><div class="ch"><div class="ic" style="background:var(--coral)">✕</div>Package માં નથી <small>Not Included</small></div>
-      <div class="xl">${['શિકારા રાઇડ','ગોંડોલા રાઇડ','ઘોડેસવારી','Union Cab','ગાર્ડન Entry','Shopping','અંગત ખર્ચ'].map(x => `<span>${x}</span>`).join('')}</div>
-      <div class="note" style="margin-top:6px">🪪 યાત્રા દરમિયાન Aadhaar / ID Card સાથે રાખવું.</div></div>
+    <div class="card"><div class="ch"><div class="ic" style="background:var(--coral)">✕</div>${isEn ? 'Not Included' : 'Package માં નથી'} <small>Exclusions</small></div>
+      <div class="xl">${exclusions.map(x => `<span>${x}</span>`).join('')}</div>
+      <div class="note" style="margin-top:6px">${isEn ? '🪪 Please carry original Aadhaar / ID Card during travel.' : '🪪 યાત્રા દરમિયાન Aadhaar / ID Card સાથે રાખવું.'}</div></div>
   </div>
   </div><div class="foot"><div class="addr" style="margin-top:0"><span><b>Sanzari Tourism</b> · Office 210, Laxmi Chambers, New Station Road, Bhuj, Kutch · <b>📞 63551 35992 · 78746 35992</b></span><span class="pno">PAGE 2/2 &nbsp;·&nbsp; <span class="since">SINCE 1990</span></span></div>
   <div class="cred">Booking No. ${esc(d.bno)} · ${esc(d.name)} &nbsp;|&nbsp; Kashmir Winter Tour 2026</div></div></div>`;
 }
-function render(el, d){ el.innerHTML = page1(d) + page2(d); }
+function render(el, d, lang = S.pdfLang || 'en'){ el.innerHTML = page1(d, lang) + page2(d, lang); }
 
 /* ===== preview scaling ===== */
 function fit(){
@@ -903,12 +999,15 @@ function validate(d){
 }
 
 /* ===== PDF ===== */
-async function makePDF(){
+async function makePDF(targetLang){
+  const lang = targetLang || S.pdfLang || 'en';
+  S.pdfLang = lang;
+  document.querySelectorAll('#pdfLangSeg .chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.v === lang));
   const d = data(); if (!validate(d)) { toast('⚠ જરૂરી વિગત ભરો'); return; }
   const btn = $('makeBtn'); btn.disabled = true; btn.lastChild.textContent = 'બની રહી છે…';
   try {
     await document.fonts.ready;
-    const exp = $('exp'); render(exp, d);
+    const exp = $('exp'); render(exp, d, lang);
     await Promise.all([...exp.querySelectorAll('img')].map(i => i.complete ? 0 : new Promise(r => { i.onload = i.onerror = r; })));
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({ unit: 'mm', format: 'a4', compress: true });
@@ -921,12 +1020,11 @@ async function makePDF(){
     exp.innerHTML = '';
     pdf.setProperties({ title: `Sanzari Tourism – Booking ${d.bno}`, author: 'Sanzari Tourism' });
     const blob = pdf.output('blob');
-    const fname = `${d.bno}_${d.name.replace(/[^\w઀-૿]+/g, '_')}.pdf`;
+    const fname = `${d.bno}_${d.name.replace(/[^\w઀-૿]+/g, '_')}_${lang.toUpperCase()}.pdf`;
     pdfFile = new File([blob], fname, { type: 'application/pdf' });
-    // save counter + employee name
     if (d.emp) store.set('sz_emp', d.emp);
-    btn.hidden = true; $('waBtn').hidden = false;
-    toast('✅ PDF તૈયાર છે – Firebase & sanzariaccount માં Save થઈ રહ્યું છે…');
+    updateActionButtons();
+    toast(lang === 'en' ? '✅ English PDF ready – Syncing to Firebase...' : '✅ ગુજરાતી PDF તૈયાર છે – Firebase & sanzariaccount માં Save થઈ રહ્યું છે…');
 
     // 1. Sync to Firebase Firestore for sanzariaccount.vercel.app
     let cloudSynced = false;
@@ -990,18 +1088,20 @@ function closeWaLangModal() {
   if (m) m.style.display = 'none';
 }
 
-function doShareWhatsApp(lang) {
+async function doShareWhatsApp(lang) {
   closeWaLangModal();
-  if (!pdfFile) {
-    toast('⚠ કૃપા કરીને પહેલાં PDF બનાવો');
-    return;
-  }
+  S.pdfLang = lang;
+  document.querySelectorAll('#pdfLangSeg .chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.v === lang));
+
+  // Re-generate PDF with selected language to match chosen language option
+  await makePDF(lang);
+
   const d = data();
   const text = lang === 'en' ? messageEn(d) : messageGu(d);
 
   // 1. Download PDF locally
-  download(pdfFile);
-  toast('✅ PDF Download થઈ – WhatsApp Web માં Attach કરો');
+  if (pdfFile) download(pdfFile);
+  toast(lang === 'en' ? '✅ English PDF Downloaded – Attach in WhatsApp' : '✅ Gujarati PDF Download થઈ – WhatsApp Web માં Attach કરો');
 
   // 2. Open WhatsApp Web or Mobile in new tab
   const mob = (d.mobile || '').replace(/\D/g, '');
@@ -1068,31 +1168,7 @@ function goToStep(s, validate = true) {
   }
 
   // Update bottom action bar buttons
-  const actBack = $('actBackBtn');
-  const actNext = $('actNextBtn');
-  const makeBtn = $('makeBtn');
-  const waBtn = $('waBtn');
-
-  if (actBack) actBack.hidden = (currentStep === 1);
-
-  if (currentStep === 1) {
-    if (actNext) { actNext.hidden = false; actNext.textContent = 'આગળ (Step 2) →'; }
-    if (makeBtn) makeBtn.hidden = true;
-    if (waBtn) waBtn.hidden = true;
-  } else if (currentStep === 2) {
-    if (actNext) { actNext.hidden = false; actNext.textContent = 'આગળ (Step 3) →'; }
-    if (makeBtn) makeBtn.hidden = true;
-    if (waBtn) waBtn.hidden = true;
-  } else if (currentStep === 3) {
-    if (actNext) actNext.hidden = true;
-    if (pdfFile) {
-      if (makeBtn) makeBtn.hidden = true;
-      if (waBtn) waBtn.hidden = false;
-    } else {
-      if (makeBtn) makeBtn.hidden = false;
-      if (waBtn) waBtn.hidden = true;
-    }
-  }
+  updateActionButtons();
 
   // Scroll smoothly to top of stepper
   const topEl = document.querySelector('.stepper-head');
