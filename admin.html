@@ -966,6 +966,19 @@ try { if (sessionStorage.getItem('sz_a') === '1') {
   loadData();
 }} catch(e){}
 
+// Real-Time Auto Sync (on tab focus, cross-tab storage change, and 25s background poll)
+window.addEventListener('focus', () => {
+  if (sessionStorage.getItem('sz_a') === '1') loadData();
+});
+window.addEventListener('storage', e => {
+  if (e.key === 'sz_local_bookings' && sessionStorage.getItem('sz_a') === '1') {
+    loadData();
+  }
+});
+setInterval(() => {
+  if (sessionStorage.getItem('sz_a') === '1') loadData();
+}, 25000);
+
 function logout() {
   try { sessionStorage.removeItem('sz_a'); } catch(e){}
   location.reload();
@@ -1272,7 +1285,8 @@ function bkCardsHTML(rows) {
           <span class="bkc-date">${fd(b['Date'])}</span>
         </div>
         <div style="display:flex;align-items:center;gap:6px">
-          <button type="button" class="card-act-btn" onclick="openEditBkModal('${esc(bno)}')" title="Edit this booking">✏️ Edit</button>
+          <a href="/index.html?edit=${encodeURIComponent(bno)}" onclick="prepareEditBooking('${esc(bno)}')" class="card-act-btn" style="text-decoration:none" title="Edit booking in main form">✏️ Edit</a>
+          <a href="/index.html?edit=${encodeURIComponent(bno)}&pdf=1" onclick="prepareEditBooking('${esc(bno)}')" class="card-act-btn" style="text-decoration:none;color:var(--blue);border-color:rgba(43,125,233,0.3)" title="Download / View PDF Receipt">📄 PDF</a>
           <button type="button" class="card-act-btn del" onclick="openDeleteBkModal('${esc(bno)}')" title="Delete this booking">🗑️</button>
         </div>
       </div>
@@ -1338,7 +1352,8 @@ function bkRowsHTML(rows) {
         <td>
           <div style="display:flex;gap:6px;align-items:center">
             ${badge}
-            <button type="button" class="refresh-btn" style="padding:0 8px" onclick="openEditBkModal('${esc(bno)}')">✏️</button>
+            <a href="/index.html?edit=${encodeURIComponent(bno)}" onclick="prepareEditBooking('${esc(bno)}')" class="refresh-btn" style="padding:0 8px;text-decoration:none;display:inline-flex;align-items:center" title="Edit in Booking Form">✏️ Edit</a>
+            <a href="/index.html?edit=${encodeURIComponent(bno)}&pdf=1" onclick="prepareEditBooking('${esc(bno)}')" class="refresh-btn" style="padding:0 8px;text-decoration:none;color:var(--blue);border-color:rgba(43,125,233,0.3);display:inline-flex;align-items:center" title="Download PDF">📄 PDF</a>
             <button type="button" class="refresh-btn" style="padding:0 8px;color:var(--coral);border-color:#F7CDBF" onclick="openDeleteBkModal('${esc(bno)}')">🗑️</button>
           </div>
         </td>
@@ -1476,25 +1491,18 @@ async function executeDeleteBk() {
   toast(`✅ Booking ${bno} delete thai gai!`);
 }
 
-function openEditBkModal(bno) {
-  document.querySelectorAll('.bkc-menu-dropdown').forEach(m => m.classList.remove('open'));
+function prepareEditBooking(bno) {
   const b = allBk.find(x => x['Booking No'] === bno);
-  if (!b) return;
+  if (b) {
+    try {
+      sessionStorage.setItem('sz_edit_booking', JSON.stringify(b));
+    } catch(e){}
+  }
+}
 
-  document.getElementById('editBnoLbl').textContent = bno;
-  document.getElementById('editBno').value = bno;
-  document.getElementById('editName').value = b['Name'] || '';
-  document.getElementById('editMobile').value = b['Mobile'] || '';
-  document.getElementById('editCity').value = b['City'] || '';
-  document.getElementById('editTourDate').value = b['Tour Date'] || '';
-  document.getElementById('editPkg').value = b['Package'] || 'sleeper';
-  document.getElementById('editMembers').value = b['Total Members'] || b['Members'] || 1;
-  document.getElementById('editTotal').value = b['Total'] || 0;
-  document.getElementById('editAdvance').value = b['Advance'] || 0;
-  document.getElementById('editDueBy').value = b['Due By'] || '';
-  document.getElementById('editEmp').value = b['Employee'] || '';
-
-  document.getElementById('editBkModal').classList.add('open');
+function openEditBkModal(bno) {
+  prepareEditBooking(bno);
+  window.location.href = `/index.html?edit=${encodeURIComponent(bno)}`;
 }
 
 function closeEditBkModal() {

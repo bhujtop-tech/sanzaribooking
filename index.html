@@ -259,6 +259,26 @@ textarea.in{height:64px;padding-top:10px;resize:vertical}
       </div>
       <p class="lead">3 સ્ટેપમાં સરળ બુકિંગ રસીદ બનાવો</p>
 
+      <!-- Edit Mode Banner (Shows when opened via [Edit] from Admin) -->
+      <div id="editModeBanner" style="display:none;background:linear-gradient(135deg,#FFF6EA,#FFEBD1);border:1.5px solid #F08A00;border-radius:14px;padding:12px 16px;margin-bottom:14px;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;box-shadow:0 4px 14px rgba(240,138,0,0.15)">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:22px">✏️</span>
+          <div>
+            <div style="font-size:14px;font-weight:700;color:var(--ink)">
+              Editing Booking: <span id="editBannerBno" style="color:var(--saffron);font-family:monospace;font-size:15px">SZ-TOUR-XXXX</span>
+            </div>
+            <div style="font-size:12px;color:var(--ink2);margin-top:2px" id="editBannerCustomer">
+              Customer details &amp; package update
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button type="button" onclick="makePDF()" class="hdr-pdf-btn" style="height:32px;padding:0 12px;font-size:11.5px">📥 Download PDF</button>
+          <button type="button" onclick="cancelEditMode()" style="height:32px;font-size:11.5px;font-weight:600;color:var(--ink2);background:#fff;border:1px solid #CBD6E4;padding:0 10px;border-radius:8px;cursor:pointer">✕ Cancel Edit</button>
+          <a href="admin.html" style="height:32px;font-size:11.5px;font-weight:700;color:var(--blue);background:#fff;border:1px solid rgba(43,125,233,.25);padding:0 10px;border-radius:8px;text-decoration:none;display:inline-flex;align-items:center">🔐 Back to Admin</a>
+        </div>
+      </div>
+
       <!-- Stepper Header -->
       <div class="stepper-head">
         <div class="stepper-bar">
@@ -390,6 +410,17 @@ textarea.in{height:64px;padding-top:10px;resize:vertical}
           <label class="fl"><span><b>નોંધ</b> · Notes</span><textarea class="in" id="notes" maxlength="90" placeholder="(Optional)"></textarea></label>
           <div class="sum"><div class="sbox"><span>કુલ રકમ</span><b id="sTotal">₹0</b></div><div class="sbox due" id="sDueBox"><span>બાકી રકમ · Due</span><b id="sDue">₹0</b></div></div>
           <div class="err" id="err"></div>
+
+          <!-- Direct Download & Action Buttons -->
+          <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
+            <button type="button" onclick="makePDF()" class="hdr-pdf-btn" id="directDownloadPdfBtn" style="flex:1;height:46px;font-size:14px;font-weight:700;justify-content:center;border-radius:12px;gap:8px">
+              📥 Download / Save PDF Receipt
+            </button>
+            <button type="button" onclick="send()" class="btn wa" style="flex:1;height:46px;font-size:13.5px;font-weight:700;justify-content:center;border-radius:12px;margin:0">
+              💬 Share on WhatsApp
+            </button>
+          </div>
+
           <div style="margin-top:14px;display:flex;align-items:center;gap:8px;font-size:11.5px;color:#0F5132;background:#EBF9F1;border:1px solid #BADBCC;padding:8px 12px;border-radius:12px;line-height:1.35">
             <span style="font-size:14px;flex-shrink:0">🟢</span>
             <span><b>Auto Sync Active:</b> Firebase Firestore &amp; <b>sanzariaccount.vercel.app</b> સાથે રિયલ-ટાઇમ કનેક્ટેડ છે.</span>
@@ -516,19 +547,50 @@ async function syncBookingToFirestore(d) {
     }
   };
 
-  const res = await fetch(`${FIRESTORE_BASE}/tourBookings?key=${FIREBASE_CONFIG.apiKey}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-  if (!res.ok) {
-    const errText = await res.text();
-    console.warn('Firestore write warning:', errText);
-    throw new Error('Firestore sync error');
+  let docId = currentEditDocId;
+  if (!docId) {
+    try {
+      const fsRes = await fetch(`${FIRESTORE_BASE}/tourBookings?key=${FIREBASE_CONFIG.apiKey}`).then(r => r.json());
+      if (fsRes && fsRes.documents) {
+        const found = fsRes.documents.find(doc => {
+          const docBno = doc.fields?.bookingNumber?.stringValue;
+          const id = doc.name ? doc.name.split('/').pop() : '';
+          return docBno === d.bno || id === d.bno;
+        });
+        if (found) docId = found.name.split('/').pop();
+      }
+    } catch(err){}
   }
-  const json = await res.json();
-  const docId = json.name ? json.name.split('/').pop() : '';
-  console.log('Synced booking to Firestore doc:', docId);
+
+  if (docId) {
+    // Update existing document via PATCH
+    const res = await fetch(`${FIRESTORE_BASE}/tourBookings/${encodeURIComponent(docId)}?key=${FIREBASE_CONFIG.apiKey}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      console.warn('Firestore update warning:', await res.text());
+    } else {
+      console.log('Successfully updated Firestore doc:', docId);
+    }
+  } else {
+    // Create new document via POST
+    const res = await fetch(`${FIRESTORE_BASE}/tourBookings?key=${FIREBASE_CONFIG.apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const errText = await res.text();
+      console.warn('Firestore write warning:', errText);
+      throw new Error('Firestore sync error');
+    }
+    const json = await res.json();
+    docId = json.name ? json.name.split('/').pop() : '';
+    currentEditDocId = docId;
+    console.log('Created Firestore doc:', docId);
+  }
 
   // Cache to sz_local_bookings for instant reflection in admin panel
   try {
@@ -651,12 +713,28 @@ function getMemberTier(ageStr, defaultType) {
 }
 
 /* ===== state ===== */
+let isEditMode = false;
+let currentEditDocId = '';
+let currentEditBno = '';
+
 const S = { adults: 1, kids: 0, couples: 0, tourType: 'group', pkg: 'sleeper', date: '', mode: 'UPI', pdfLang: 'en', manualTotal: false };
 let pdfFile = null;
 let members = []; // [{name, age, type:'adult'|'kid'}]
 
 function nextNo(){ const M=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'],n=new Date(); return `SZ-${M[n.getMonth()]}${String(n.getFullYear()).slice(2)}-${String(n.getDate()).padStart(2,'0')}${String(n.getMonth()+1).padStart(2,'0')}`; }
 function resetForm(){
+  isEditMode = false;
+  currentEditDocId = '';
+  currentEditBno = '';
+  const banner = $('editModeBanner');
+  if (banner) banner.style.display = 'none';
+  const makeBtn = $('makeBtn');
+  if (makeBtn) {
+    makeBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 12v6M9 15l3 3 3-3"/></svg>PDF બનાવો`;
+  }
+  const hdrMakePdfBtn = $('hdrMakePdfBtn');
+  if (hdrMakePdfBtn) hdrMakePdfBtn.textContent = '📄 PDF બનાવો';
+
   CFG = getCfg();
   ['name','mobile','city','advance','notes','total'].forEach(k => $(k).value = '');
   const defDate = (CFG.dates && CFG.dates.length > 0) ? CFG.dates[0] : '';
@@ -1705,7 +1783,289 @@ $('makeBtn').onclick = makePDF;
 $('waBtn').onclick = send;
 $('newBtn').onclick = () => { resetForm(); scrollTo({ top: 0, behavior: 'smooth' }); toast('નવું બુકિંગ'); };
 
+/* ===== EDIT BOOKING FROM ADMIN & CLOUD SYNC ===== */
+function parseFsDocToLocal(doc) {
+  const f = doc.fields || {};
+  const docId = doc.name ? doc.name.split('/').pop() : '';
+  const bno = f.bookingNumber?.stringValue || docId || '';
+  const date = f.createdAt?.stringValue ? f.createdAt.stringValue.slice(0, 10) : (f.bookingDate?.stringValue || new Date().toISOString().slice(0, 10));
+  const name = f.customerName?.stringValue || '';
+  const mobile = f.customerPhone?.stringValue || '';
+  const city = f.city?.stringValue || '';
+  const adults = Number(f.adultsCount?.integerValue || 1);
+  const kids = Number(f.kidsCount?.integerValue || 0);
+  const couples = Number(f.couplesCount?.integerValue || 0);
+  const members = Number(f.membersCount?.integerValue || (adults + kids));
+  const pkgVal = f.travelClass?.stringValue || '';
+  const pkg = (pkgVal.toLowerCase().includes('3ac') || pkgVal.toLowerCase().includes('ac train')) ? '3ac' : 'sleeper';
+  const tourDate = f.tourDate?.stringValue || '';
+  const tourType = (f.tourType?.stringValue === 'private' || f.tourType?.stringValue === 'Private Tour') ? 'private' : 'group';
+  const mode = f.paymentMode?.stringValue || f.paymentMethod?.stringValue || 'UPI';
+  const total = Number(f.totalAmount?.integerValue || 0);
+  const advance = Number(f.advancePaid?.integerValue || 0);
+  const due = Number(f.pendingAmount?.integerValue || f.balanceDue?.integerValue || Math.max(0, total - advance));
+  const dueBy = f.dueBy?.stringValue || '';
+  const emp = f.bookedBy?.stringValue || '';
+  const notes = f.specialNotes?.stringValue || '';
+
+  let membersArr = [];
+  if (f.members?.arrayValue?.values) {
+    membersArr = f.members.arrayValue.values.map(v => {
+      const mf = v.mapValue?.fields || {};
+      return {
+        name: mf.name?.stringValue || '',
+        age: mf.age?.stringValue || '',
+        gender: mf.gender?.stringValue || 'Male',
+        type: mf.type?.stringValue || (Number(mf.age?.stringValue || 99) < 12 ? 'kid' : 'adult')
+      };
+    });
+  }
+
+  return {
+    _docId: docId,
+    'Booking No': bno,
+    'Date': date,
+    'Name': name,
+    'Mobile': mobile,
+    'City': city,
+    'Adults': adults,
+    'Kids': kids,
+    'Couples': couples,
+    'Total Members': members,
+    'members': membersArr,
+    'Package': pkg,
+    'Tour Date': tourDate,
+    'Tour Type': tourType,
+    'Payment Mode': mode,
+    'Total': total,
+    'Advance': advance,
+    'Due': due,
+    'Due By': dueBy,
+    'Employee': emp,
+    'Notes': notes
+  };
+}
+
+function loadBookingIntoForm(b) {
+  if (!b) return;
+  isEditMode = true;
+  currentEditBno = b['Booking No'] || b.bookingNumber || '';
+  currentEditDocId = b._docId || '';
+
+  // 1. Show Edit Banner
+  const banner = $('editModeBanner');
+  if (banner) banner.style.display = 'flex';
+  const bnoEl = $('editBannerBno');
+  if (bnoEl) bnoEl.textContent = currentEditBno;
+  const custEl = $('editBannerCustomer');
+  if (custEl) custEl.textContent = `${b['Name'] || b.customerName || 'Guest'} · ${b['Mobile'] || b.customerPhone || ''}`;
+
+  // 2. Booking No & Date
+  $('bno').value = currentEditBno;
+  $('bdate').value = b['Date'] || b.bookingDate || (b.createdAt ? b.createdAt.slice(0, 10) : iso(new Date()));
+
+  // 3. Tour Type: 'group' vs 'private'
+  const tType = (b['Tour Type'] === 'private' || b.tourType === 'private' || b.tourType === 'Private Tour') ? 'private' : 'group';
+  S.tourType = tType;
+  document.querySelectorAll('#tourType .chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.v === tType));
+  if (tType === 'group') {
+    $('groupDatesBox').style.display = 'block';
+    $('pvtDateBox').style.display = 'none';
+  } else {
+    $('groupDatesBox').style.display = 'none';
+    $('pvtDateBox').style.display = 'block';
+  }
+
+  // 4. Tour Date
+  const rawDate = b['Tour Date'] || b.tourDate || '';
+  S.date = rawDate;
+  if (tType === 'private') {
+    if ($('pvtDate')) $('pvtDate').value = rawDate;
+  } else {
+    let foundChip = false;
+    document.querySelectorAll('#dates .chip').forEach(c => {
+      const match = c.dataset.v === rawDate;
+      c.setAttribute('aria-pressed', match);
+      if (match) foundChip = true;
+    });
+    if (!foundChip && rawDate) {
+      const dBtn = document.createElement('button');
+      dBtn.type = 'button';
+      dBtn.className = 'chip';
+      dBtn.dataset.v = rawDate;
+      dBtn.setAttribute('aria-pressed', 'true');
+      dBtn.textContent = fd(rawDate);
+      dBtn.onclick = () => { S.date = rawDate; changed(); };
+      $('dates').appendChild(dBtn);
+    }
+  }
+
+  // 5. Customer info
+  $('name').value = b['Name'] || b.customerName || '';
+  $('mobile').value = (b['Mobile'] || b.customerPhone || '').replace(/\D/g, '').slice(0, 10);
+  $('city').value = b['City'] || b.city || '';
+
+  // 6. Travel Class / Package
+  const pkgStr = (b['Package'] || b.travelClass || '').toLowerCase();
+  S.pkg = (pkgStr.includes('3ac') || pkgStr.includes('ac train')) ? '3ac' : 'sleeper';
+  document.querySelectorAll('#pkg .chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.v === S.pkg));
+
+  // 7. Members & Counts
+  let memberItems = [];
+  if (Array.isArray(b.members) && b.members.length) {
+    memberItems = b.members.map(m => {
+      if (m.mapValue?.fields) {
+        return {
+          name: m.mapValue.fields.name?.stringValue || '',
+          age: m.mapValue.fields.age?.stringValue || '',
+          gender: m.mapValue.fields.gender?.stringValue || 'Male',
+          type: m.mapValue.fields.type?.stringValue || (Number(m.mapValue.fields.age?.stringValue || 99) < 12 ? 'kid' : 'adult')
+        };
+      }
+      return {
+        name: m.name || '',
+        age: m.age || '',
+        gender: m.gender || 'Male',
+        type: m.type || (Number(m.age || 99) < 12 ? 'kid' : 'adult')
+      };
+    });
+  } else if (typeof b.membersList === 'string' && b.membersList) {
+    try {
+      memberItems = JSON.parse(b.membersList);
+    } catch(ex){}
+  }
+
+  if (memberItems.length > 0) {
+    members = memberItems;
+    const aCount = members.filter(m => m.type !== 'kid').length;
+    const kCount = members.filter(m => m.type === 'kid').length;
+    S.adults = Math.max(1, aCount || Number(b['Adults'] || b.adultsCount || 1));
+    S.kids = kCount !== undefined ? kCount : Number(b['Kids'] || b.kidsCount || 0);
+  } else {
+    S.adults = Number(b['Adults'] || b.adultsCount || 1);
+    S.kids = Number(b['Kids'] || b.kidsCount || 0);
+    members = [];
+    for (let i = 0; i < S.adults; i++) members.push({ name: i === 0 ? (b['Name'] || b.customerName || '') : '', age: '', type: 'adult' });
+    for (let i = 0; i < S.kids; i++) members.push({ name: '', age: '', type: 'kid' });
+  }
+
+  S.couples = Number(b['Couples'] || b.couplesCount || 0);
+  document.querySelectorAll('.step').forEach(st => {
+    const k = st.dataset.k;
+    if (k && S[k] !== undefined) st.querySelector('output').textContent = S[k];
+  });
+  renderMembers();
+
+  // 8. Financials: Total, Advance
+  const tot = Number(b['Total'] || b.totalAmount || 0);
+  const adv = Number(b['Advance'] || b.advancePaid || 0);
+  $('total').value = tot ? inr(tot) : '';
+  $('advance').value = adv ? inr(adv) : '';
+  S.manualTotal = true;
+
+  // 9. Payment Mode, Due By, Employee, Notes
+  S.mode = b['Payment Mode'] || b.paymentMode || b.paymentMethod || 'UPI';
+  document.querySelectorAll('#mode .chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.v === S.mode));
+  $('dueby').value = b['Due By'] || b.dueBy || '';
+  $('emp').value = b['Employee'] || b.bookedBy || '';
+  $('notes').value = b['Notes'] || b.specialNotes || '';
+
+  // 10. Update action button labels
+  const makeBtn = $('makeBtn');
+  if (makeBtn) {
+    makeBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>💾 Update &amp; PDF`;
+  }
+  const hdrMakePdfBtn = $('hdrMakePdfBtn');
+  if (hdrMakePdfBtn) {
+    hdrMakePdfBtn.textContent = '💾 Update & PDF';
+  }
+
+  changed();
+  toast(`✅ Booking ${currentEditBno} loaded for editing`);
+}
+
+function cancelEditMode() {
+  isEditMode = false;
+  currentEditDocId = '';
+  currentEditBno = '';
+  const banner = $('editModeBanner');
+  if (banner) banner.style.display = 'none';
+  resetForm();
+  const url = new URL(window.location);
+  url.searchParams.delete('edit');
+  url.searchParams.delete('bno');
+  url.searchParams.delete('pdf');
+  url.searchParams.delete('autodownload');
+  window.history.replaceState({}, '', url.pathname);
+  toast('🔄 Reset to New Booking form');
+}
+
+async function checkUrlForEditBooking() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const editBno = urlParams.get('edit') || urlParams.get('bno');
+  const autoDownload = urlParams.get('autodownload') === '1' || urlParams.get('pdf') === '1';
+
+  if (!editBno) return;
+
+  // 1. SessionStorage
+  let bkData = null;
+  try {
+    const cached = sessionStorage.getItem('sz_edit_booking');
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (parsed['Booking No'] === editBno || parsed.bookingNumber === editBno) {
+        bkData = parsed;
+      }
+    }
+  } catch(e){}
+
+  // 2. localStorage sz_local_bookings
+  if (!bkData) {
+    try {
+      const raw = localStorage.getItem('sz_local_bookings');
+      if (raw) {
+        const list = JSON.parse(raw);
+        if (Array.isArray(list)) {
+          bkData = list.find(b => (b['Booking No'] === editBno || b.bookingNumber === editBno));
+        }
+      }
+    } catch(e){}
+  }
+
+  // 3. Firestore live collection query
+  if (!bkData) {
+    try {
+      const res = await fetch(`${FIRESTORE_BASE}/tourBookings?key=${FIREBASE_CONFIG.apiKey}`).then(r => r.json());
+      if (res && res.documents) {
+        const doc = res.documents.find(d => {
+          const bNum = d.fields?.bookingNumber?.stringValue;
+          const docId = d.name ? d.name.split('/').pop() : '';
+          return bNum === editBno || docId === editBno;
+        });
+        if (doc) {
+          bkData = parseFsDocToLocal(doc);
+        }
+      }
+    } catch(err){
+      console.warn('Error fetching booking for edit:', err);
+    }
+  }
+
+  if (bkData) {
+    loadBookingIntoForm(bkData);
+    if (autoDownload) {
+      setTimeout(async () => {
+        await makePDF();
+        if (pdfFile) download(pdfFile);
+      }, 600);
+    }
+  } else {
+    toast(`⚠ Booking ${editBno} load nathi thayu`);
+  }
+}
+
 resetForm();
+checkUrlForEditBooking();
 document.fonts && document.fonts.ready.then(fit);
 </script>
 </body>
