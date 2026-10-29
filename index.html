@@ -207,8 +207,8 @@ textarea.in{height:64px;padding-top:10px;resize:vertical}
 .a4 .note b{color:var(--green)}
 .a4 .sg{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
 .a4 .s{border-radius:12px;overflow:hidden;background:#fff;border:1px solid var(--line)}
-.a4 .s .im{height:62px;background-size:cover;background-position:center;position:relative}
-.a4 .s .im i{position:absolute;left:6px;top:6px;background:rgba(255,255,255,.95);border-radius:6px;font-style:normal;font-size:9.5px;font-weight:700;padding:1px 5px;color:var(--ink2)}
+.a4 .s .im{height:62px;background-size:cover;background-position:center;position:relative;overflow:hidden}
+.a4 .s .im i{position:absolute;left:6px;top:6px;background:rgba(255,255,255,.95);border-radius:6px;font-style:normal;font-size:9.5px;font-weight:700;padding:1px 5px;color:var(--ink2);z-index:2}
 .a4 .s .nm{padding:4px 7px 5px;font-size:11.5px;font-weight:700;line-height:1.25}
 .a4 .s .nm small{display:block;font-size:9px;font-weight:500;color:var(--muted)}
 .a4 .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -671,9 +671,31 @@ const IMG_FALLBACKS = {
   "saffron": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 250' width='400' height='250'><rect width='400' height='250' fill='%234A2E6B'/><circle cx='100' cy='140' r='18' fill='%238B5CF6'/><circle cx='180' cy='120' r='22' fill='%238B5CF6'/><circle cx='260' cy='150' r='20' fill='%238B5CF6'/><circle cx='340' cy='130' r='18' fill='%238B5CF6'/><text x='20' y='230' font-family='sans-serif' font-weight='700' font-size='16' fill='%23FFFFFF'>Saffron Valley</text></svg>",
   "batfactory": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 250' width='400' height='250'><rect width='400' height='250' fill='%238F5800'/><rect x='100' y='50' width='25' height='140' fill='%23F3DDA0' rx='4'/><rect x='180' y='50' width='25' height='140' fill='%23F3DDA0' rx='4'/><rect x='260' y='50' width='25' height='140' fill='%23F3DDA0' rx='4'/><text x='20' y='230' font-family='sans-serif' font-weight='700' font-size='16' fill='%23FFFFFF'>Bat Factory</text></svg>",
   "pahalgam": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 250' width='400' height='250'><rect width='400' height='250' fill='%23194129'/><path d='M0 100 L120 30 L240 90 L360 20 L400 80 L400 250 L0 250 Z' fill='%23112E1D'/><path d='M120 30 L150 55 L90 55 Z M360 20 L385 45 L335 45 Z' fill='%23FFFFFF'/><path d='M0 170 Q 200 130 400 170 L400 250 L0 250 Z' fill='%232B7DE9'/><text x='20' y='230' font-family='sans-serif' font-weight='700' font-size='16' fill='%23FFFFFF'>Pahalgam Valley</text></svg>",
-  "aishmuqam": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 250' width='400' height='250'><rect width='400' height='250' fill='%231E3D59'/><path d='M80 250 L200 70 L320 250 Z' fill='%2313273A'/><rect x='180' y='110' width='40' height='60' fill='%23FFFFFF' rx='4'/><text x='20' y='230' font-family='sans-serif' font-weight='700' font-size='16' fill='%23FFFFFF'>Aishmuqam Shrine</text></svg>"
+  "aishmuqam": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 250' width='400' height='250'><rect width='400' height='250' fill='%231E3D59'/><path d='M80 250 L200 70 L320 250 Z' fill='%2313273A'/><rect x='180' y='110' width='40' height='60' fill='%23FFFFFF' rx='4'/><text x='20' y='230' font-family='sans-serif' font-weight='700' font-size='16' fill='%23FFFFFF'>Aishmuqam Shrine</text></svg>",
+  "jammu": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 250' width='400' height='250'><rect width='400' height='250' fill='%23B97A00'/><rect x='80' y='60' width='240' height='140' fill='%236B4600' rx='8'/><path d='M60 60 L200 20 L340 60 Z' fill='%23FFD269'/><text x='20' y='230' font-family='sans-serif' font-weight='700' font-size='16' fill='%23FFFFFF'>Jammu Hotel</text></svg>"
 };
-const IMG = IMG_FALLBACKS;
+
+const IMG = {
+  logo: "/img/logo.png",
+  banner: "/img/places/banner.jpg",
+  srinagar: "/img/places/srinagar.jpg",
+  dal: "/img/places/dal.jpg",
+  shankaracharya: "/img/places/shankaracharya.jpg",
+  shalimar: "/img/places/shalimar.jpg",
+  mughal: "/img/places/mughal.jpg",
+  nishat: "/img/places/nishat.jpg",
+  hazratbal: "/img/places/hazratbal.jpg",
+  ganderbal: "/img/places/ganderbal.jpg",
+  sonamarg: "/img/places/sonamarg.jpg",
+  gulmarg: "/img/places/gulmarg.jpg",
+  apple: "/img/places/apple.jpg",
+  saffron: "/img/places/saffron.jpg",
+  batfactory: "/img/places/batfactory.jpg",
+  pahalgam: "/img/places/pahalgam.jpg",
+  aishmuqam: "/img/places/aishmuqam.jpg",
+  jammu: "/img/places/jammu.jpg",
+  houseboat: "/img/places/houseboat.jpg"
+};
 const CREDITS = "Srinagar: KennyOMG (CC BY-SA 3.0); Dal: Fulvio Spada (CC BY-SA 2.0); Shankaracharya: Divya Gupta (CC BY-SA 3.0); Shalimar: Pradeepkjoshi (CC BY-SA 4.0); Mughal: Harvinder Chandigarh (CC BY 4.0); Nishat: McKay Savage (CC BY 2.0); Hazratbal: Zuck28 (CC BY 4.0); Ganderbal: Rajarshi Mitra (CC BY 2.0); Sonamarg: Ganesh Mohan T / UnpetitproleX (CC BY 4.0); Gulmarg: Zahoor Bhat (CC BY-SA 4.0); Apple: Auli Raha (CC BY-SA 4.0); Saffron: Umarsami (CC BY-SA 4.0); Batfactory: Arv94 (CC BY-SA 4.0); Pahalgam: KennyOMG (CC BY-SA 3.0); Aishmuqam: Sauood07 (CC BY 4.0)";
 const SIGHTS = [['srinagar','શ્રીનગર સિટી','Srinagar City'],['dal','દાલ લેક','Dal Lake'],['shankaracharya','શંકરાચાર્ય મંદિર','Shankaracharya Temple'],['shalimar','શાલીમાર ગાર્ડન','Shalimar Garden'],['mughal','મુગલ ગાર્ડન','Mughal Garden'],['nishat','નિશાત બાગ','Nishat Bagh'],['hazratbal','હઝરતબલ','Hazratbal'],['ganderbal','ગંદરબલ સિંધ નદી','Ganderbal & Sindh River'],['sonamarg','સોનમર્ગ ગ્લેશિયર','Sonamarg Glacier'],['gulmarg','ગુલમર્ગ','Gulmarg Hill Station'],['apple','એપલ વેલી','Apple Valley'],['saffron','કેસર વેલી','Saffron Valley'],['batfactory','બેટ ફેક્ટરી','Bat Factory'],['pahalgam','પહેલગામ','Pahalgam'],['aishmuqam','એશમુકામ','Aishmuqam']];
 
@@ -891,13 +913,15 @@ function calcTotal(){
 function data(){
   const total = S.manualTotal ? num($('total').value) : calcTotal();
   const advance = num($('advance').value);
+  const custName = $('name').value.trim();
   return {
-    bno: $('bno').value.trim(), bdate: $('bdate').value, name: $('name').value.trim(), mobile: $('mobile').value.trim(), city: $('city').value.trim(),
+    bno: $('bno').value.trim(), bdate: $('bdate').value, name: custName, mobile: $('mobile').value.trim(), city: $('city').value.trim(),
     adults: S.adults, kids: S.kids, couples: S.couples, members: S.adults + S.kids, tourType: S.tourType, pkg: S.pkg, date: S.date, mode: S.mode,
     total, advance, due: Math.max(0, total - advance), dueby: $('dueby').value, emp: $('emp').value.trim(), notes: $('notes').value.trim(),
-    membersList: members.map(m => {
+    membersList: members.map((m, idx) => {
       const tier = getMemberTier(m.age, m.type);
-      return { name: m.name.trim(), age: m.age, type: m.type, tag: tier.tag, cls: tier.cls, pct: tier.pct };
+      const mName = m.name?.trim() || (idx === 0 ? custName : '');
+      return { name: mName, age: m.age, type: m.type, tag: tier.tag, cls: tier.cls, pct: tier.pct };
     })
   };
 }
@@ -995,8 +1019,10 @@ function page1(d, lang = 'en', totalPages = 5){
       <div class="l" style="margin-top:0"><b>${isEn ? 'Customer Name' : 'ગ્રાહકનું નામ'}</b> · Customer Name</div>${V(d.name)}
       <div class="r2"><div><div class="l"><b>${isEn ? 'Mobile' : 'મોબાઇલ'}</b> · Mobile</div>${V(d.mobile ? '+91 ' + d.mobile.replace(/(\d{5})(\d+)/,'$1 $2') : '')}</div><div><div class="l"><b>${isEn ? 'City' : 'શહેર / ગામ'}</b> · City</div>${V(d.city)}</div></div>
       <div class="l"><b>${isEn ? 'Members' : 'સભ્યો'}</b> · Members</div>
-      <div class="r3"><div class="v">${d.members}<span class="tag">${isEn ? 'Total' : 'કુલ'}</span></div><div class="v">${d.adults}<span class="tag">${isEn ? 'Adults' : 'મોટા'}</span></div><div class="v">${d.kids}<span class="tag">${isEn ? 'Kids' : 'બાળક'}</span></div></div>
-      ${d.membersList && d.membersList.filter(m=>m.name).length ? `<div class="l" style="margin-top:8px;font-size:11px;font-weight:600;color:var(--muted)">${isEn ? 'MEMBER LIST' : 'સભ્ય-સૂચી · MEMBER LIST'}</div><table style="width:100%;border-collapse:collapse;margin-top:4px">${d.membersList.map((m,i)=>`<tr style="border-bottom:1px solid #ECF0F6"><td style="padding:3px 4px;font-size:11px;color:var(--muted);width:18px">${i+1}</td><td style="padding:3px 6px;font-size:12.5px;font-weight:600">${esc(m.name)||'—'}</td><td style="padding:3px 4px;font-size:11.5px;color:var(--muted);width:36px">${m.age?m.age+' yr':''}</td><td style="padding:3px 4px;text-align:right"><span style="font-size:10px;padding:2px 6px;border-radius:99px;font-weight:600;background:${m.cls==='adult'?'#E1EEFD':m.cls==='kid-mid'?'#E6F4EA':m.cls==='infant'?'#F3E8FF':'#FFF0E0'};color:${m.cls==='adult'?'#2B7DE9':m.cls==='kid-mid'?'#1DAA6B':m.cls==='infant'?'#8B5CF6':'#F08A00'}">${m.tag}</span></td></tr>`).join('')}</table>` : ''}
+      ${d.membersList && d.membersList.length ? `<div class="l" style="margin-top:7px;font-size:11px;font-weight:600;color:var(--muted)">${isEn ? 'PASSENGER MANIFEST · MEMBER LIST' : 'સભ્ય-સૂચી · PASSENGER MANIFEST'}</div><table style="width:100%;border-collapse:collapse;margin-top:3px">${d.membersList.map((m,i)=>{
+        const pName = m.name ? esc(m.name) : (i === 0 && d.name ? esc(d.name) : (isEn ? 'Passenger ' + (i+1) : 'સભ્ય ' + (i+1)));
+        return `<tr style="border-bottom:1px solid #ECF0F6"><td style="padding:2px 4px;font-size:10.5px;color:var(--muted);width:16px">${i+1}</td><td style="padding:2px 6px;font-size:12px;font-weight:600">${pName}</td><td style="padding:2px 4px;font-size:11px;color:var(--muted);width:38px">${m.age?m.age+' yr':'—'}</td><td style="padding:2px 4px;text-align:right"><span style="font-size:9.5px;padding:1.5px 6px;border-radius:99px;font-weight:600;background:${m.cls==='adult'?'#E1EEFD':m.cls==='kid-mid'?'#E6F4EA':m.cls==='infant'?'#F3E8FF':'#FFF0E0'};color:${m.cls==='adult'?'#2B7DE9':m.cls==='kid-mid'?'#1DAA6B':m.cls==='infant'?'#8B5CF6':'#F08A00'}">${m.tag}</span></td></tr>`;
+      }).join('')}</table>` : ''}
       </div>
     <div class="card"><div class="ch"><div class="ic" style="background:var(--blue)">🗓</div>${isEn ? 'Trip Details' : 'યાત્રાની વિગત'} <small>Trip</small></div>
       <div class="l" style="margin-top:0"><b>${isEn ? 'Tour Type' : 'ટુર ટાઈપ'}</b> · Tour Type</div>${V(tourLabel)}
@@ -1025,14 +1051,14 @@ function page2(d, lang = 'en', totalPages = 5){
   const isEn = lang === 'en';
   const stays = isEn ? [
     ['srinagar','Srinagar','2 Nights','#FFEBD1','#F08A00'],
-    ['dal','Houseboat','1 Night','#E1EEFD','#2B7DE9'],
+    ['houseboat','Houseboat','1 Night','#E1EEFD','#2B7DE9'],
     ['pahalgam','Pahalgam','1 Night','#DDF4E8','#1DAA6B'],
-    [null,'Jammu','1 Night','#FFF4D6','#B97A00']
+    ['jammu','Jammu','1 Night','#FFF4D6','#B97A00']
   ] : [
     ['srinagar','શ્રીનગર','2 Night','#FFEBD1','#F08A00'],
-    ['dal','Houseboat','1 Night','#E1EEFD','#2B7DE9'],
+    ['houseboat','Houseboat','1 Night','#E1EEFD','#2B7DE9'],
     ['pahalgam','પહેલગામ','1 Night','#DDF4E8','#1DAA6B'],
-    [null,'જમ્મુ','1 Night','#FFF4D6','#B97A00']
+    ['jammu','જમ્મુ','1 Night','#FFF4D6','#B97A00']
   ];
 
   const routeStops = isEn ? [
@@ -1062,7 +1088,7 @@ function page2(d, lang = 'en', totalPages = 5){
     : ['શિકારા રાઇડ','ગોંડોલા રાઇડ','ઘોડેસવારી','Union Cab','ગાર્ડન Entry','Shopping','અંગત ખર્ચ'];
 
   return `<div class="a4 p2"><div class="bg"></div><div class="pg">${header()}
-  <div class="ban" style="margin-top:6px;background-image:url(${IMG.banner})"><div class="sh"></div>
+  <div class="ban" style="margin-top:6px;background-image:url('${IMG.banner}');background-size:cover;background-position:center"><div class="sh"></div>
     <div class="in2"><div class="k">TOUR DETAILS · ${isEn ? 'Kashmir Tour' : 'પ્રવાસની વિગત'}</div><h3>Kashmir Winter Tour 2026</h3><p>${isEn ? '9 Days · Bhuj to Bhuj · 15 Sightseeing Places' : '9 દિવસ · ભુજથી ભુજ · 15 જગ્યા Sightseeing'}</p></div>
     <div class="pills"><span>👤 ${esc(d.name) || 'Guest'}</span><span>🗓 ${d.date ? fd(d.date) : 'Departure —'}</span><span>👥 ${d.members} ${isEn ? 'Pax' : 'સભ્યો'}</span></div></div>
 
@@ -1078,11 +1104,11 @@ function page2(d, lang = 'en', totalPages = 5){
     </div></div>
 
   <div class="card" style="margin-top:6px"><div class="ch"><div class="ic" style="background:var(--saffron)">🏨</div>${isEn ? '5 Nights 3-Star Hotel & Houseboat' : '5 રાત 2 Star Hotel'} <small>Stay</small></div>
-    <div class="stays">${stays.map(([k,n,t,bg,c]) => `<div class="st">${k ? `<div class="im" style="background-image:url('${IMG[k]}');background-size:cover;background-position:center"></div>` : '<div class="im j">🏙️</div>'}<div class="tt">${n}<i style="background:${bg};color:${c}">${t}</i></div></div>`).join('')}</div>
+    <div class="stays">${stays.map(([k,n,t,bg,c]) => `<div class="st"><div class="im" style="background-image:url('${IMG[k]||''}');background-size:cover;background-position:center;position:relative"><img src="${IMG[k]||''}" alt="${n}" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.style.display='none'"></div><div class="tt">${n}<i style="background:${bg};color:${c}">${t}</i></div></div>`).join('')}</div>
     <div class="note" style="margin-top:4px">${isEn ? '<b>✓</b> 4 Bed Deluxe Room in all hotels &nbsp;<b>✓</b> Breakfast & Dinner Included &nbsp;<b>✓</b> 35 Years Experience Tour Management' : '<b>✓</b> દરેક હોટલમાં 4 Bed Deluxe Room &nbsp;<b>✓</b> Breakfast અને Dinner સામેલ &nbsp;<b>✓</b> 35 વર્ષના અનુભવ સાથે Tour Management'}</div></div>
 
   <div class="card" style="margin-top:6px"><div class="ch"><div class="ic" style="background:var(--green)">📍</div>Sightseeing <small>${isEn ? '15 Places' : '15 જગ્યા'}</small></div>
-    <div class="sg">${SIGHTS.map(([k,g,e],i) => `<div class="s"><div class="im" style="background-image:url('${IMG[k]}');background-size:cover;background-position:center"><i>${String(i+1).padStart(2,'0')}</i></div><div class="nm">${isEn ? e : g}<small>${isEn ? g : e}</small></div></div>`).join('')}</div></div>
+    <div class="sg">${SIGHTS.map(([k,g,e],i) => `<div class="s"><div class="im" style="background-image:url('${IMG[k]||''}');background-size:cover;background-position:center;position:relative"><img src="${IMG[k]||''}" alt="${e}" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.style.display='none'"><i>${String(i+1).padStart(2,'0')}</i></div><div class="nm">${isEn ? e : g}<small>${isEn ? g : e}</small></div></div>`).join('')}</div></div>
 
   <div class="two" style="margin-top:6px">
     <div class="card"><div class="ch"><div class="ic" style="background:var(--gold)">₹</div>Package Price <small>${isEn ? 'Per Person' : 'પ્રતિ વ્યક્તિ'}</small></div>
@@ -1792,10 +1818,33 @@ function parseFsDocToLocal(doc) {
   const name = f.customerName?.stringValue || '';
   const mobile = f.customerPhone?.stringValue || '';
   const city = f.city?.stringValue || '';
-  const adults = Number(f.adultsCount?.integerValue || 1);
-  const kids = Number(f.kidsCount?.integerValue || 0);
+
+  let membersArr = [];
+  if (f.members?.arrayValue?.values) {
+    membersArr = f.members.arrayValue.values.map((v, i) => {
+      const mf = v.mapValue?.fields || {};
+      const ageStr = mf.age?.stringValue || (mf.age?.integerValue ? String(mf.age.integerValue) : '');
+      const numAge = parseInt(ageStr, 10);
+      const isKid = !isNaN(numAge) && numAge < 12;
+      const mName = mf.name?.stringValue || (i === 0 ? name : '');
+      return {
+        name: mName,
+        age: ageStr,
+        gender: mf.gender?.stringValue || 'Male',
+        type: mf.type?.stringValue || (isKid ? 'kid' : 'adult')
+      };
+    });
+  }
+
+  const totalPax = membersArr.length || Number(f.membersCount?.integerValue || 0);
+  const derivedAdults = membersArr.filter(m => m.type !== 'kid').length;
+  const derivedKids = membersArr.filter(m => m.type === 'kid').length;
+
+  const adults = derivedAdults || Number(f.adultsCount?.integerValue || (totalPax ? totalPax : 1));
+  const kids = derivedKids || Number(f.kidsCount?.integerValue || 0);
   const couples = Number(f.couplesCount?.integerValue || 0);
-  const members = Number(f.membersCount?.integerValue || (adults + kids));
+  const members = totalPax || (adults + kids) || 1;
+
   const pkgVal = f.travelClass?.stringValue || '';
   const pkg = (pkgVal.toLowerCase().includes('3ac') || pkgVal.toLowerCase().includes('ac train')) ? '3ac' : 'sleeper';
   const tourDate = f.tourDate?.stringValue || '';
@@ -1807,19 +1856,6 @@ function parseFsDocToLocal(doc) {
   const dueBy = f.dueBy?.stringValue || '';
   const emp = f.bookedBy?.stringValue || '';
   const notes = f.specialNotes?.stringValue || '';
-
-  let membersArr = [];
-  if (f.members?.arrayValue?.values) {
-    membersArr = f.members.arrayValue.values.map(v => {
-      const mf = v.mapValue?.fields || {};
-      return {
-        name: mf.name?.stringValue || '',
-        age: mf.age?.stringValue || '',
-        gender: mf.gender?.stringValue || 'Male',
-        type: mf.type?.stringValue || (Number(mf.age?.stringValue || 99) < 12 ? 'kid' : 'adult')
-      };
-    });
-  }
 
   return {
     _docId: docId,
@@ -1833,6 +1869,7 @@ function parseFsDocToLocal(doc) {
     'Couples': couples,
     'Total Members': members,
     'members': membersArr,
+    'membersList': JSON.stringify(membersArr),
     'Package': pkg,
     'Tour Date': tourDate,
     'Tour Type': tourType,
@@ -1910,37 +1947,58 @@ function loadBookingIntoForm(b) {
   S.pkg = (pkgStr.includes('3ac') || pkgStr.includes('ac train')) ? '3ac' : 'sleeper';
   document.querySelectorAll('#pkg .chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.v === S.pkg));
 
-  // 7. Members & Counts
+  // 7. Members & Counts (Full Manifest Sync)
   let memberItems = [];
   if (Array.isArray(b.members) && b.members.length) {
-    memberItems = b.members.map(m => {
+    memberItems = b.members.map((m, idx) => {
       if (m.mapValue?.fields) {
+        const mf = m.mapValue.fields;
+        const aVal = mf.age?.stringValue || (mf.age?.integerValue ? String(mf.age.integerValue) : '');
+        const numA = parseInt(aVal, 10);
+        const mType = mf.type?.stringValue || (!isNaN(numA) && numA < 12 ? 'kid' : 'adult');
         return {
-          name: m.mapValue.fields.name?.stringValue || '',
-          age: m.mapValue.fields.age?.stringValue || '',
-          gender: m.mapValue.fields.gender?.stringValue || 'Male',
-          type: m.mapValue.fields.type?.stringValue || (Number(m.mapValue.fields.age?.stringValue || 99) < 12 ? 'kid' : 'adult')
+          name: mf.name?.stringValue || (idx === 0 ? (b['Name'] || b.customerName || '') : ''),
+          age: aVal,
+          gender: mf.gender?.stringValue || 'Male',
+          type: mType
         };
       }
+      const aVal = String(m.age ?? '');
+      const numA = parseInt(aVal, 10);
+      const mType = m.type || (!isNaN(numA) && numA < 12 ? 'kid' : 'adult');
       return {
-        name: m.name || '',
-        age: m.age || '',
+        name: m.name || (idx === 0 ? (b['Name'] || b.customerName || '') : ''),
+        age: aVal,
         gender: m.gender || 'Male',
-        type: m.type || (Number(m.age || 99) < 12 ? 'kid' : 'adult')
+        type: mType
       };
     });
   } else if (typeof b.membersList === 'string' && b.membersList) {
     try {
-      memberItems = JSON.parse(b.membersList);
+      const parsed = JSON.parse(b.membersList);
+      if (Array.isArray(parsed) && parsed.length) {
+        memberItems = parsed.map((m, idx) => {
+          const aVal = String(m.age ?? '');
+          const numA = parseInt(aVal, 10);
+          return {
+            name: m.name || (idx === 0 ? (b['Name'] || b.customerName || '') : ''),
+            age: aVal,
+            gender: m.gender || 'Male',
+            type: m.type || (!isNaN(numA) && numA < 12 ? 'kid' : 'adult')
+          };
+        });
+      }
     } catch(ex){}
+  } else if (Array.isArray(b.membersList) && b.membersList.length) {
+    memberItems = b.membersList;
   }
 
   if (memberItems.length > 0) {
     members = memberItems;
     const aCount = members.filter(m => m.type !== 'kid').length;
     const kCount = members.filter(m => m.type === 'kid').length;
-    S.adults = Math.max(1, aCount || Number(b['Adults'] || b.adultsCount || 1));
-    S.kids = kCount !== undefined ? kCount : Number(b['Kids'] || b.kidsCount || 0);
+    S.adults = Math.max(1, aCount);
+    S.kids = kCount;
   } else {
     S.adults = Number(b['Adults'] || b.adultsCount || 1);
     S.kids = Number(b['Kids'] || b.kidsCount || 0);
@@ -1952,7 +2010,10 @@ function loadBookingIntoForm(b) {
   S.couples = Number(b['Couples'] || b.couplesCount || 0);
   document.querySelectorAll('.step').forEach(st => {
     const k = st.dataset.k;
-    if (k && S[k] !== undefined) st.querySelector('output').textContent = S[k];
+    if (k && S[k] !== undefined) {
+      const out = st.querySelector('output');
+      if (out) out.textContent = S[k];
+    }
   });
   renderMembers();
 
@@ -1981,7 +2042,7 @@ function loadBookingIntoForm(b) {
   }
 
   changed();
-  toast(`✅ Booking ${currentEditBno} loaded for editing`);
+  toast(`✅ Booking ${currentEditBno} (${members.length} PAX) loaded for editing`);
 }
 
 function cancelEditMode() {
@@ -2007,19 +2068,41 @@ async function checkUrlForEditBooking() {
 
   if (!editBno) return;
 
-  // 1. SessionStorage
   let bkData = null;
+
+  // 1. SessionStorage check (valid ONLY if it contains parsed members)
   try {
     const cached = sessionStorage.getItem('sz_edit_booking');
     if (cached) {
       const parsed = JSON.parse(cached);
-      if (parsed['Booking No'] === editBno || parsed.bookingNumber === editBno) {
+      if ((parsed['Booking No'] === editBno || parsed.bookingNumber === editBno) && Array.isArray(parsed.members) && parsed.members.length > 0) {
         bkData = parsed;
       }
     }
   } catch(e){}
 
-  // 2. localStorage sz_local_bookings
+  // 2. Query Firestore LIVE collection to guarantee complete manifest sync from CRM
+  try {
+    const res = await fetch(`${FIRESTORE_BASE}/tourBookings?key=${FIREBASE_CONFIG.apiKey}`).then(r => r.json());
+    if (res && res.documents) {
+      const doc = res.documents.find(d => {
+        const bNum = d.fields?.bookingNumber?.stringValue;
+        const docId = d.name ? d.name.split('/').pop() : '';
+        return bNum === editBno || docId === editBno;
+      });
+      if (doc) {
+        const liveData = parseFsDocToLocal(doc);
+        if (liveData && (liveData.members?.length || !bkData)) {
+          bkData = liveData;
+          try { sessionStorage.setItem('sz_edit_booking', JSON.stringify(liveData)); } catch(e){}
+        }
+      }
+    }
+  } catch(err){
+    console.warn('Error fetching live booking for edit:', err);
+  }
+
+  // 3. Fallback to localStorage
   if (!bkData) {
     try {
       const raw = localStorage.getItem('sz_local_bookings');
@@ -2032,32 +2115,13 @@ async function checkUrlForEditBooking() {
     } catch(e){}
   }
 
-  // 3. Firestore live collection query
-  if (!bkData) {
-    try {
-      const res = await fetch(`${FIRESTORE_BASE}/tourBookings?key=${FIREBASE_CONFIG.apiKey}`).then(r => r.json());
-      if (res && res.documents) {
-        const doc = res.documents.find(d => {
-          const bNum = d.fields?.bookingNumber?.stringValue;
-          const docId = d.name ? d.name.split('/').pop() : '';
-          return bNum === editBno || docId === editBno;
-        });
-        if (doc) {
-          bkData = parseFsDocToLocal(doc);
-        }
-      }
-    } catch(err){
-      console.warn('Error fetching booking for edit:', err);
-    }
-  }
-
   if (bkData) {
     loadBookingIntoForm(bkData);
     if (autoDownload) {
       setTimeout(async () => {
         await makePDF();
         if (pdfFile) download(pdfFile);
-      }, 600);
+      }, 700);
     }
   } else {
     toast(`⚠ Booking ${editBno} load nathi thayu`);

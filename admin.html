@@ -887,12 +887,35 @@ function parseFirestoreDoc(doc) {
   const name = f.customerName?.stringValue || '';
   const mobile = f.customerPhone?.stringValue || '';
   const city = f.city?.stringValue || '';
-  const adults = Number(f.adultsCount?.integerValue || 1);
-  const kids = Number(f.kidsCount?.integerValue || 0);
+
+  let membersArr = [];
+  if (f.members?.arrayValue?.values) {
+    membersArr = f.members.arrayValue.values.map((v, i) => {
+      const mf = v.mapValue?.fields || {};
+      const ageStr = mf.age?.stringValue || (mf.age?.integerValue ? String(mf.age.integerValue) : '');
+      const numAge = parseInt(ageStr, 10);
+      const isKid = !isNaN(numAge) && numAge < 12;
+      const mName = mf.name?.stringValue || (i === 0 ? name : '');
+      return {
+        name: mName,
+        age: ageStr,
+        gender: mf.gender?.stringValue || 'Male',
+        type: mf.type?.stringValue || (isKid ? 'kid' : 'adult')
+      };
+    });
+  }
+
+  const totalPax = membersArr.length || Number(f.membersCount?.integerValue || 0);
+  const derivedAdults = membersArr.filter(m => m.type !== 'kid').length;
+  const derivedKids = membersArr.filter(m => m.type === 'kid').length;
+
+  const adults = derivedAdults || Number(f.adultsCount?.integerValue || (totalPax ? totalPax : 1));
+  const kids = derivedKids || Number(f.kidsCount?.integerValue || 0);
   const couples = Number(f.couplesCount?.integerValue || 0);
-  const members = Number(f.membersCount?.integerValue || (adults + kids));
-  const pkgVal = f.travelClass?.stringValue;
-  const pkg = (pkgVal === '3AC Train' || pkgVal === 'AC Train' || pkgVal === '3ac') ? '3ac' : 'sleeper';
+  const members = totalPax || (adults + kids) || 1;
+
+  const pkgVal = f.travelClass?.stringValue || '';
+  const pkg = (pkgVal.toLowerCase().includes('3ac') || pkgVal.toLowerCase().includes('ac train')) ? '3ac' : 'sleeper';
   const tourDate = f.tourDate?.stringValue || '';
   const mode = f.paymentMode?.stringValue || f.paymentMethod?.stringValue || 'UPI';
   const total = Number(f.totalAmount?.integerValue || 0);
@@ -913,6 +936,8 @@ function parseFirestoreDoc(doc) {
     'Kids': kids,
     'Couples': couples,
     'Total Members': members,
+    'members': membersArr,
+    'membersList': JSON.stringify(membersArr),
     'Package': pkg,
     'Tour Date': tourDate,
     'Payment Mode': mode,
