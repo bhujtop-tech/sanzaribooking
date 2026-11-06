@@ -769,13 +769,24 @@ function updatePricingUI() {
   }
 }
 
-function applyPricingConfig(data) {
-  if (!data) return;
-  const sleeper = Number(data.sleeperPrice || data.sleeper || (data.prices && data.prices.sleeper) || CFG.prices.sleeper || 13999);
-  const train3AC = Number(data.train3ACPrice || data['3ac'] || data.threeAC || (data.prices && data.prices['3ac']) || CFG.prices['3ac'] || 15999);
-  const couple = Number(data.coupleRoomSurcharge || data.coupleExtra || CFG.coupleExtra || 3000);
-  const child5_7 = Number(data.child5_7RatePct ?? data.child5_7Pct ?? CFG.child5_7Pct ?? 50);
-  const child8_11 = Number(data.child8_11RatePct ?? data.child8_11Pct ?? CFG.child8_11Pct ?? 75);
+function applyPricingConfig(raw) {
+  if (!raw) return;
+  const data = (raw.tourPricing && typeof raw.tourPricing === 'object')
+    ? Object.assign({}, raw, raw.tourPricing)
+    : raw;
+
+  const pickNum = (...vals) => {
+    for (const v of vals) {
+      if (v !== undefined && v !== null && v !== '' && !isNaN(Number(v))) return Number(v);
+    }
+    return undefined;
+  };
+
+  const sleeper = pickNum(data.sleeperPrice, data.sleeper, data.prices && data.prices.sleeper, CFG.prices && CFG.prices.sleeper, 13999);
+  const train3AC = pickNum(data.acTrainPrice, data.train3ACPrice, data.ac3Price, data['3ac'], data.threeAC, data.prices && data.prices['3ac'], CFG.prices && CFG.prices['3ac'], 15999);
+  const couple = pickNum(data.coupleRoomSurcharge, data.coupleExtra, CFG.coupleExtra, 3000);
+  const child5_7 = pickNum(data.child5To7Percent, data.child5_7RatePct, data.child5_7Pct, CFG.child5_7Pct, 50);
+  const child8_11 = pickNum(data.child8To11Percent, data.child8_11RatePct, data.child8_11Pct, CFG.child8_11Pct, 75);
 
   CFG.prices = { sleeper, '3ac': train3AC };
   CFG.coupleExtra = couple;
@@ -784,7 +795,11 @@ function applyPricingConfig(data) {
   store.set('sz_config', JSON.stringify(CFG));
 
   updatePricingUI();
-  if (typeof syncMembersUI === 'function') syncMembersUI();
+  if (typeof renderMembers === 'function' && S && Array.isArray(S.members) && S.members.length > 0) {
+    renderMembers();
+  } else if (typeof syncMembersUI === 'function') {
+    syncMembersUI();
+  }
   if (typeof changed === 'function') changed();
 }
 
@@ -792,8 +807,8 @@ function openPricingModal() {
   $('cfgSleeper').value = CFG.prices.sleeper || 13999;
   $('cfg3AC').value = CFG.prices['3ac'] || 15999;
   $('cfgCouple').value = CFG.coupleExtra || 3000;
-  $('cfgChild5_7').value = CFG.child5_7Pct || 50;
-  $('cfgChild8_11').value = CFG.child8_11Pct || 75;
+  $('cfgChild5_7').value = CFG.child5_7Pct ?? 50;
+  $('cfgChild8_11').value = CFG.child8_11Pct ?? 75;
   $('pricingModal').style.display = 'flex';
 }
 
@@ -810,16 +825,26 @@ async function savePricingSettings() {
   const coupleExtra = num($('cfgCouple').value) || 3000;
   const child5_7 = num($('cfgChild5_7').value) || 50;
   const child8_11 = num($('cfgChild8_11').value) || 75;
+  const nowIso = new Date().toISOString();
 
   const configObj = {
     sleeperPrice: sleeper,
+    acTrainPrice: train3AC,
+    ac3Price: train3AC,
     train3ACPrice: train3AC,
     coupleRoomSurcharge: coupleExtra,
+    child5To7Percent: child5_7,
     child5_7RatePct: child5_7,
+    child5_7Pct: child5_7,
+    child8To11Percent: child8_11,
     child8_11RatePct: child8_11,
-    updatedAt: new Date().toISOString()
+    child8_11Pct: child8_11,
+    updatedAt: nowIso
   };
 
+  if (typeof S === 'object' && S) {
+    S.manualTotal = false;
+  }
   applyPricingConfig(configObj);
 
   // 1. Firebase SDK save with merge: true
@@ -827,35 +852,47 @@ async function savePricingSettings() {
   if (db) {
     try {
       await db.collection('settings').doc('tourPricing').set(configObj, { merge: true });
-      await db.collection('settings').doc('store_config').set(configObj, { merge: true });
+      await db.collection('settings').doc('store_config').set(
+        Object.assign({}, configObj, { tourPricing: configObj }),
+        { merge: true }
+      );
     } catch(e) {
       console.warn('Firebase SDK set error:', e);
     }
   }
 
   // 2. REST API fallback PATCH with updateMask
-  const restPayload = {
-    fields: {
-      sleeperPrice: { integerValue: String(sleeper) },
-      train3ACPrice: { integerValue: String(train3AC) },
-      coupleRoomSurcharge: { integerValue: String(coupleExtra) },
-      child5_7RatePct: { integerValue: String(child5_7) },
-      child8_11RatePct: { integerValue: String(child8_11) },
-      updatedAt: { stringValue: configObj.updatedAt }
-    }
+  const restFields = {
+    sleeperPrice: { integerValue: String(sleeper) },
+    acTrainPrice: { integerValue: String(train3AC) },
+    ac3Price: { integerValue: String(train3AC) },
+    train3ACPrice: { integerValue: String(train3AC) },
+    coupleRoomSurcharge: { integerValue: String(coupleExtra) },
+    child5To7Percent: { integerValue: String(child5_7) },
+    child5_7RatePct: { integerValue: String(child5_7) },
+    child5_7Pct: { integerValue: String(child5_7) },
+    child8To11Percent: { integerValue: String(child8_11) },
+    child8_11RatePct: { integerValue: String(child8_11) },
+    child8_11Pct: { integerValue: String(child8_11) },
+    updatedAt: { stringValue: nowIso }
   };
-  const mask = 'updateMask.fieldPaths=sleeperPrice&updateMask.fieldPaths=train3ACPrice&updateMask.fieldPaths=coupleRoomSurcharge&updateMask.fieldPaths=child5_7RatePct&updateMask.fieldPaths=child8_11RatePct&updateMask.fieldPaths=updatedAt';
+  const fieldNames = Object.keys(restFields);
+  const mask = fieldNames.map(f => `updateMask.fieldPaths=${f}`).join('&');
 
   try {
     await fetch(`${FIRESTORE_BASE}/settings/tourPricing?${mask}&key=${FIREBASE_CONFIG.apiKey}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(restPayload)
+      body: JSON.stringify({ fields: restFields })
     });
-    await fetch(`${FIRESTORE_BASE}/settings/store_config?${mask}&key=${FIREBASE_CONFIG.apiKey}`, {
+    const storeFields = Object.assign({}, restFields, {
+      tourPricing: { mapValue: { fields: restFields } }
+    });
+    const storeMask = mask + '&updateMask.fieldPaths=tourPricing';
+    await fetch(`${FIRESTORE_BASE}/settings/store_config?${storeMask}&key=${FIREBASE_CONFIG.apiKey}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(restPayload)
+      body: JSON.stringify({ fields: storeFields })
     });
   } catch(e) {
     console.warn('REST save error:', e);
@@ -866,22 +903,37 @@ async function savePricingSettings() {
   toast('✅ Pricing & Discount Settings Saved & Synced!');
 }
 
+function parseFirestoreFieldsMap(fieldsObj) {
+  const data = {};
+  if (!fieldsObj) return data;
+  for (const [k, v] of Object.entries(fieldsObj)) {
+    if (v.integerValue !== undefined) data[k] = parseInt(v.integerValue, 10);
+    else if (v.doubleValue !== undefined) data[k] = parseFloat(v.doubleValue);
+    else if (v.stringValue !== undefined) {
+      const numVal = Number(v.stringValue);
+      data[k] = isNaN(numVal) ? v.stringValue : numVal;
+    } else if (v.mapValue && v.mapValue.fields) {
+      data[k] = parseFirestoreFieldsMap(v.mapValue.fields);
+    }
+  }
+  return data;
+}
+
 async function fetchPricingSettingsREST() {
   try {
     const res = await fetch(`${FIRESTORE_BASE}/settings/tourPricing?key=${FIREBASE_CONFIG.apiKey}`);
     if (res.ok) {
       const json = await res.json();
       if (json && json.fields) {
-        const data = {};
-        for (const [k, v] of Object.entries(json.fields)) {
-          if (v.integerValue !== undefined) data[k] = parseInt(v.integerValue, 10);
-          else if (v.doubleValue !== undefined) data[k] = parseFloat(v.doubleValue);
-          else if (v.stringValue !== undefined) {
-            const numVal = Number(v.stringValue);
-            data[k] = isNaN(numVal) ? v.stringValue : numVal;
-          }
-        }
-        applyPricingConfig(data);
+        applyPricingConfig(parseFirestoreFieldsMap(json.fields));
+        return;
+      }
+    }
+    const res2 = await fetch(`${FIRESTORE_BASE}/settings/store_config?key=${FIREBASE_CONFIG.apiKey}`);
+    if (res2.ok) {
+      const json2 = await res2.json();
+      if (json2 && json2.fields) {
+        applyPricingConfig(parseFirestoreFieldsMap(json2.fields));
       }
     }
   } catch(e) {
@@ -895,8 +947,7 @@ function listenToPricingSettings() {
     try {
       db.collection('settings').doc('tourPricing').onSnapshot(doc => {
         if (doc.exists) {
-          const data = doc.data();
-          applyPricingConfig(data);
+          applyPricingConfig(doc.data());
         }
       }, err => {
         console.warn('onSnapshot tourPricing error:', err);

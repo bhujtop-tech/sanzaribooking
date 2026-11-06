@@ -1705,7 +1705,7 @@ async function saveExp() {
 }
 
 /* ── CONFIG SETTINGS ── */
-function loadAdminConfig() {
+async function loadAdminConfig() {
   const saved = localStorage.getItem('sz_config');
   let cfg = {
     prices: { sleeper: 13999, '3ac': 15999 }, coupleExtra: 3000,
@@ -1718,6 +1718,39 @@ function loadAdminConfig() {
   }
   window.adminCfg = cfg;
   renderAdminCfg();
+
+  // Also fetch latest pricing from Firestore settings/tourPricing
+  try {
+    const res = await fetch(`${FIRESTORE_BASE}/settings/tourPricing?key=${FIREBASE_CONFIG.apiKey}`);
+    if (res.ok) {
+      const json = await res.json();
+      const f = json.fields || {};
+      const getNum = (obj) => {
+        if (!obj) return undefined;
+        if (obj.integerValue !== undefined) return parseInt(obj.integerValue, 10);
+        if (obj.doubleValue !== undefined) return parseFloat(obj.doubleValue);
+        if (obj.stringValue !== undefined && !isNaN(Number(obj.stringValue))) return Number(obj.stringValue);
+        return undefined;
+      };
+      const slp = getNum(f.sleeperPrice);
+      const ac = getNum(f.acTrainPrice) ?? getNum(f.train3ACPrice) ?? getNum(f.ac3Price);
+      const cpl = getNum(f.coupleRoomSurcharge);
+      const c57 = getNum(f.child5To7Percent) ?? getNum(f.child5_7RatePct) ?? getNum(f.child5_7Pct);
+      const c811 = getNum(f.child8To11Percent) ?? getNum(f.child8_11RatePct) ?? getNum(f.child8_11Pct);
+
+      if (slp !== undefined) cfg.prices.sleeper = slp;
+      if (ac !== undefined) cfg.prices['3ac'] = ac;
+      if (cpl !== undefined) cfg.coupleExtra = cpl;
+      if (c57 !== undefined) cfg.child5_7Pct = c57;
+      if (c811 !== undefined) cfg.child8_11Pct = c811;
+
+      window.adminCfg = cfg;
+      localStorage.setItem('sz_config', JSON.stringify(cfg));
+      renderAdminCfg();
+    }
+  } catch(e) {
+    console.warn('Admin Firestore config load error:', e);
+  }
 }
 
 function renderAdminCfg() {
@@ -1735,8 +1768,8 @@ function renderAdminCfg() {
   const slp = document.getElementById('cfgSleeper'); if (slp) slp.value = cfg.prices?.sleeper || 13999;
   const tac = document.getElementById('cfg3AC'); if (tac) tac.value = cfg.prices?.['3ac'] || 15999;
   const cpl = document.getElementById('cfgCouple'); if (cpl) cpl.value = cfg.coupleExtra || 3000;
-  const c57 = document.getElementById('cfgChild57'); if (c57) c57.value = cfg.child5_7Pct || 50;
-  const c811 = document.getElementById('cfgChild811'); if (c811) c811.value = cfg.child8_11Pct || 75;
+  const c57 = document.getElementById('cfgChild57'); if (c57) c57.value = cfg.child5_7Pct ?? 50;
+  const c811 = document.getElementById('cfgChild811'); if (c811) c811.value = cfg.child8_11Pct ?? 75;
 }
 
 function addCfgDate() {
@@ -1757,18 +1790,57 @@ function removeCfgDate(index) {
   saveAdminConfig(true);
 }
 
-function saveAdminConfig(quiet = false) {
+async function saveAdminConfig(quiet = false) {
   const cfg = window.adminCfg || {};
-  cfg.prices = {
-    sleeper: Number(document.getElementById('cfgSleeper').value) || 13999,
-    '3ac': Number(document.getElementById('cfg3AC').value) || 15999
-  };
-  cfg.coupleExtra = Number(document.getElementById('cfgCouple').value) || 3000;
-  cfg.child5_7Pct = Number(document.getElementById('cfgChild57').value) || 50;
-  cfg.child8_11Pct = Number(document.getElementById('cfgChild811').value) || 75;
-  
+  const sleeper = Number(document.getElementById('cfgSleeper').value) || 13999;
+  const train3AC = Number(document.getElementById('cfg3AC').value) || 15999;
+  const coupleExtra = Number(document.getElementById('cfgCouple').value) || 3000;
+  const child5_7 = Number(document.getElementById('cfgChild57').value) || 50;
+  const child8_11 = Number(document.getElementById('cfgChild811').value) || 75;
+
+  cfg.prices = { sleeper, '3ac': train3AC };
+  cfg.coupleExtra = coupleExtra;
+  cfg.child5_7Pct = child5_7;
+  cfg.child8_11Pct = child8_11;
+
   localStorage.setItem('sz_config', JSON.stringify(cfg));
-  if (!quiet) toast('✅ Settings saved! (Home page updated)');
+
+  const nowIso = new Date().toISOString();
+  const restFields = {
+    sleeperPrice: { integerValue: String(sleeper) },
+    acTrainPrice: { integerValue: String(train3AC) },
+    ac3Price: { integerValue: String(train3AC) },
+    train3ACPrice: { integerValue: String(train3AC) },
+    coupleRoomSurcharge: { integerValue: String(coupleExtra) },
+    child5To7Percent: { integerValue: String(child5_7) },
+    child5_7RatePct: { integerValue: String(child5_7) },
+    child5_7Pct: { integerValue: String(child5_7) },
+    child8To11Percent: { integerValue: String(child8_11) },
+    child8_11RatePct: { integerValue: String(child8_11) },
+    child8_11Pct: { integerValue: String(child8_11) },
+    updatedAt: { stringValue: nowIso }
+  };
+  const mask = Object.keys(restFields).map(f => `updateMask.fieldPaths=${f}`).join('&');
+
+  try {
+    await fetch(`${FIRESTORE_BASE}/settings/tourPricing?${mask}&key=${FIREBASE_CONFIG.apiKey}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fields: restFields })
+    });
+    const storeFields = Object.assign({}, restFields, {
+      tourPricing: { mapValue: { fields: restFields } }
+    });
+    await fetch(`${FIRESTORE_BASE}/settings/store_config?${mask}&updateMask.fieldPaths=tourPricing&key=${FIREBASE_CONFIG.apiKey}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fields: storeFields })
+    });
+  } catch(e) {
+    console.warn('Admin Firestore save error:', e);
+  }
+
+  if (!quiet) toast('✅ Settings saved & synced to Cloud!');
 }
 </script>
 </body>
