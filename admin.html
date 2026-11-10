@@ -921,7 +921,8 @@ function parseFirestoreDoc(doc) {
   const total = Number(f.totalAmount?.integerValue || 0);
   const advance = Number(f.advancePaid?.integerValue || 0);
   const due = Number(f.pendingAmount?.integerValue || f.balanceDue?.integerValue || Math.max(0, total - advance));
-  const dueBy = f.dueBy?.stringValue || '';
+  const rawDueBy = f.dueBy?.stringValue || f.dueDate?.stringValue || f.due_by?.stringValue || f.balanceDueDate?.stringValue || '';
+  const dueBy = rawDueBy ? rawDueBy.slice(0, 10) : '';
   const emp = f.bookedBy?.stringValue || '';
   const notes = f.specialNotes?.stringValue || '';
 
@@ -945,6 +946,7 @@ function parseFirestoreDoc(doc) {
     'Advance': advance,
     'Due': due,
     'Due By': dueBy,
+    'dueBy': dueBy,
     'Employee': emp,
     'Notes': notes
   };
@@ -1600,13 +1602,15 @@ async function saveEditedBk(e) {
           advancePaid: { integerValue: String(advance) },
           pendingAmount: { integerValue: String(due) },
           balanceDue: { integerValue: String(due) },
+          dueBy: { stringValue: dueBy || '' },
+          dueDate: { stringValue: dueBy || '' },
           paymentStatus: { stringValue: paymentStatus },
           bookedBy: { stringValue: emp || 'Office Staff' },
           updatedAt: { stringValue: new Date().toISOString() }
         }
       };
       
-      const updateMask = 'updateMask.fieldPaths=customerName&updateMask.fieldPaths=customerPhone&updateMask.fieldPaths=city&updateMask.fieldPaths=tourDate&updateMask.fieldPaths=travelClass&updateMask.fieldPaths=membersCount&updateMask.fieldPaths=totalAmount&updateMask.fieldPaths=advancePaid&updateMask.fieldPaths=pendingAmount&updateMask.fieldPaths=balanceDue&updateMask.fieldPaths=paymentStatus&updateMask.fieldPaths=bookedBy&updateMask.fieldPaths=updatedAt';
+      const updateMask = 'updateMask.fieldPaths=customerName&updateMask.fieldPaths=customerPhone&updateMask.fieldPaths=city&updateMask.fieldPaths=tourDate&updateMask.fieldPaths=travelClass&updateMask.fieldPaths=membersCount&updateMask.fieldPaths=totalAmount&updateMask.fieldPaths=advancePaid&updateMask.fieldPaths=pendingAmount&updateMask.fieldPaths=balanceDue&updateMask.fieldPaths=dueBy&updateMask.fieldPaths=dueDate&updateMask.fieldPaths=paymentStatus&updateMask.fieldPaths=bookedBy&updateMask.fieldPaths=updatedAt';
 
       await fetch(`${FIRESTORE_BASE}/tourBookings/${docId}?${updateMask}&key=${FIREBASE_CONFIG.apiKey}`, {
         method: 'PATCH',
